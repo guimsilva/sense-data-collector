@@ -10,8 +10,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef ELEC_RASTERIZE_STROKE_H
-#define ELEC_RASTERIZE_STROKE_H
+#ifndef ELEV_RASTERIZE_STROKE_H
+#define ELEV_RASTERIZE_STROKE_H
 
 #include <cstdint>
 
@@ -24,4 +24,4 @@ void RasterizeStroke(
     int height,
     int8_t* out_buffer);
 
-#endif   // ELEC_RASTERIZE_STROKE_H
+#endif   // ELEV_RASTERIZE_STROKE_H

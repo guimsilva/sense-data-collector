@@ -1,5 +1,5 @@
-#ifndef ELEC_IMU_PROVIDER_H
-#define ELEC_IMU_PROVIDER_H
+#ifndef ELEV_IMU_PROVIDER_H
+#define ELEV_IMU_PROVIDER_H
 
 #include "Arduino_BMI270_BMM150.h"
 #include <ArduinoBLE.h>
@@ -454,4 +454,4 @@ void UpdateStroke(int new_samples, bool* done_just_triggered) {
 }
 }
 
-#endif  // ELEC_IMU_PROVIDER_H
+#endif  // ELEV_IMU_PROVIDER_H

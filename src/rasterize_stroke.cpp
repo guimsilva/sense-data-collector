@@ -88,7 +88,7 @@ void RasterizeStroke(
   const int one_half_fp = (kFixedPoint / 2);
 
   for (int point_index = 0; point_index < (stroke_points_count - 1); ++point_index) {
-    //Iterate through the stroke and select two sequential start and end coordinate pairs
+    //Iterate through the stroke and sELEVt two sequential start and end coordinate pairs
     // to form the a line segment
     //example: Stroke points = [a,b,c...] then we would iterate start=a end=b, start=b end=c...
     const int8_t* start_point = &stroke_points[point_index * 2];

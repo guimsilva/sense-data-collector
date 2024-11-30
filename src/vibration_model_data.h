@@ -15,10 +15,10 @@ limitations under the License.
 // don't have a file system. It was created using the command:
 // xxd -i vibration_model.tflite > vibration_model_data.cc
 
-#ifndef ELEC_VIBRATION_MODEL_DATA_H_
-#define ELEC_VIBRATION_MODEL_DATA_H_
+#ifndef ELEV_VIBRATION_MODEL_DATA_H_
+#define ELEV_VIBRATION_MODEL_DATA_H_
 
 extern const unsigned char g_vibration_model_data[];
 extern const int g_vibration_model_data_len;
 
-#endif  // ELEC_VIBRATION_MODEL_DATA_H_
+#endif  // ELEV_VIBRATION_MODEL_DATA_H_
