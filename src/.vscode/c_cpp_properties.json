@@ -3,8 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "C:/Users/guisi/OneDrive/Documents/Arduino/TinyML3/magic_wand/**"
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",

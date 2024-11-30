@@ -18,7 +18,7 @@ limitations under the License.
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-#include "magic_wand_model_data.h"
+#include "vibration_model_data.h"
 #include "rasterize_stroke.h"
 #include "imu_provider.h"
 
@@ -113,7 +113,7 @@ void setup() {
 
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
-  model = tflite::GetModel(g_magic_wand_model_data);
+  model = tflite::GetModel(g_vibration_model_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     TF_LITE_REPORT_ERROR(error_reporter,
                          "Model provided is schema version %d not equal "
