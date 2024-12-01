@@ -22,8 +22,17 @@ limitations under the License.
 #include "vibration_model_data.h"
 #include "rasterize_stroke.h"
 #include "imu_provider.h"
+#include "arduinoFFT.h"
 
 #define BLE_SENSE_UUID(val) ("4798e0f2-" val "-4d68-af64-8a8f5258404e")
+
+#define SAMPLES 64              // Must be a power of 2
+#define SAMPLING_FREQUENCY 1000 // Hz. Determines maximum frequency that can be analysed by the FFT.
+
+#define SCL_INDEX 0x00
+#define SCL_TIME 0x01
+#define SCL_FREQUENCY 0x02
+#define SCL_PLOT 0x03
 
 namespace
 {
@@ -63,6 +72,23 @@ namespace
   float current_pressure = 0.0f;
   float new_pressure = 0.0f;
   float altitude = 0.0f;
+
+  // IMU sensor
+  float acc_x, acc_y, acc_z;
+
+  // FFT
+  unsigned int sampling_period_us;
+  unsigned long microseconds;
+
+  /*
+  These are the input and output vectors
+  Input vectors receive computed results from FFT
+  */
+  double vReal[SAMPLES];
+  double vImag[SAMPLES];
+
+  /* Create FFT object */
+  ArduinoFFT<double> FFT = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
 } // namespace
 
 void setup()
@@ -97,6 +123,9 @@ void setup()
     while (1)
       ;
   }
+
+  // Configure BLE
+
   String ble_address = BLE.address();
 
   // Output BLE settings over Serial
@@ -122,6 +151,9 @@ void setup()
 
   BLE.addService(ble_service);
   BLE.advertise();
+
+  // Define acc sampling period
+  sampling_period_us = round(1000000 * (1.0 / SAMPLING_FREQUENCY));
 
   // Set up logging. Google style is to avoid globals or statics because of
   // lifetime uncertainty, but since this has a trivial destructor it's okay.
@@ -178,25 +210,60 @@ void setup()
 
 void loop()
 {
-  BLEDevice ble_central = BLE.central();
+  // BLEDevice ble_central = BLE.central();
 
-  // if a central is connected to the peripheral:
-  static bool ble_was_connected_last = false;
-  if (ble_central && !ble_was_connected_last)
+  // // if a central is connected to the peripheral:
+  // static bool ble_was_connected_last = false;
+  // if (ble_central && !ble_was_connected_last)
+  // {
+  //   Serial.print("Connected to central: ");
+  //   // print the central's BT address:
+  //   Serial.println(ble_central.address());
+  // }
+  // ble_was_connected_last = ble_central;
+
+  // getAltitude();
+  // Serial.print("Altitude according to kPa is = ");
+  // Serial.print(altitude);
+  // Serial.println(" m");
+  // Serial.println();
+  // delay(1000);
+
+  /* Sampling */
+  for (int i = 0; i < SAMPLES; i++)
   {
-    Serial.print("Connected to central: ");
-    // print the central's BT address:
-    Serial.println(ble_central.address());
+    microseconds = micros();
+    if (IMU.accelerationAvailable())
+    {
+      IMU.readAcceleration(acc_x, acc_y, acc_z);
+    }
+    vReal[i] = sqrt(acc_x * acc_x + acc_y * acc_y + acc_z * acc_z);
+    vImag[i] = 0;
+
+    while (micros() < (microseconds + sampling_period_us))
+      ; // wait for next sample
   }
-  ble_was_connected_last = ble_central;
 
-  getAltitude();
-  Serial.print("Altitude according to kPa is = ");
-  Serial.print(altitude);
-  Serial.println(" m");
-  Serial.println();
+  /* Print the results of the simulated sampling according to time */
+  Serial.println("Data:");
+  PrintVector(vReal, SAMPLES, SCL_TIME);
+  FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward); /* Weigh data */
+  Serial.println("Weighed data:");
+  PrintVector(vReal, SAMPLES, SCL_TIME);
+  FFT.compute(FFTDirection::Forward); /* Compute FFT */
+  Serial.println("Computed Real values:");
+  PrintVector(vReal, SAMPLES, SCL_INDEX);
+  Serial.println("Computed Imaginary values:");
+  PrintVector(vImag, SAMPLES, SCL_INDEX);
+  FFT.complexToMagnitude(); /* Compute magnitudes */
+  Serial.println("Computed magnitudes:");
+  PrintVector(vReal, (SAMPLES >> 1), SCL_FREQUENCY);
+  double x = FFT.majorPeak();
+  Serial.println(x, 6);
 
-  delay(1000);
+  while (1)
+    ; /* Run Once */
+  // delay(2000); /* Repeat after delay */
 }
 
 void getAltitude()
@@ -207,4 +274,31 @@ void getAltitude()
     current_pressure = new_pressure;
     altitude = 44330 * (1 - pow(current_pressure / 101.325, 1 / 5.255));
   }
+}
+
+void PrintVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
+{
+  for (uint16_t i = 0; i < bufferSize; i++)
+  {
+    double abscissa;
+    /* Print abscissa value */
+    switch (scaleType)
+    {
+    case SCL_INDEX:
+      abscissa = (i * 1.0);
+      break;
+    case SCL_TIME:
+      abscissa = ((i * 1.0) / SAMPLING_FREQUENCY);
+      break;
+    case SCL_FREQUENCY:
+      abscissa = ((i * 1.0 * SAMPLING_FREQUENCY) / SAMPLES);
+      break;
+    }
+    Serial.print(abscissa, 6);
+    if (scaleType == SCL_FREQUENCY)
+      Serial.print("Hz");
+    Serial.print(" ");
+    Serial.println(vData[i], 4);
+  }
+  Serial.println();
 }
