@@ -58,6 +58,11 @@ namespace
   // -------------------------------------------------------------------------------- //
   constexpr int label_count = 10;
   const char *labels[label_count] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+
+  // Pressure sensor
+  float current_pressure = 0.0f;
+  float new_pressure = 0.0f;
+  float altitude = 0.0f;
 } // namespace
 
 void setup()
@@ -76,6 +81,14 @@ void setup()
       ;
   }
   SetupIMU();
+
+  // Start pressure sensor
+  if (!BARO.begin())
+  {
+    Serial.println("Failed to initialize pressure sensor!");
+    while (1)
+      ;
+  }
 
   // Start BLE
   if (!BLE.begin())
@@ -177,6 +190,21 @@ void loop()
   }
   ble_was_connected_last = ble_central;
 
-  Serial.println("ALL GOOD");
+  getAltitude();
+  Serial.print("Altitude according to kPa is = ");
+  Serial.print(altitude);
+  Serial.println(" m");
+  Serial.println();
+
   delay(1000);
+}
+
+void getAltitude()
+{
+  new_pressure = BARO.readPressure();
+  if (new_pressure != current_pressure)
+  {
+    current_pressure = new_pressure;
+    altitude = 44330 * (1 - pow(current_pressure / 101.325, 1 / 5.255));
+  }
 }
