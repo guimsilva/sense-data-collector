@@ -11,6 +11,7 @@ limitations under the License.
 ==============================================================================*/
 #include <Arduino.h>
 #include <TensorFlowLite.h>
+#include <Arduino_LPS22HB.h>
 
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -36,11 +37,11 @@ namespace
   int8_t raster_buffer[raster_byte_count];
 
   // BLE settings
-  BLEService service(BLE_SENSE_UUID("0000"));
-  BLECharacteristic strokeCharacteristic(BLE_SENSE_UUID("300a"), BLERead, stroke_struct_byte_count);
+  BLEService ble_service(BLE_SENSE_UUID("0000"));
+  BLECharacteristic ble_strokeCharacteristic(BLE_SENSE_UUID("300a"), BLERead, stroke_struct_byte_count);
 
   // String to calculate the local and device name
-  String name;
+  String ble_name;
 
   // Create an area of memory to use for input, output, and intermediate arrays.
   // The size of this will depend on the model you're using, and may need to be
@@ -91,22 +92,22 @@ void setup()
 
   ble_address.toUpperCase();
 
-  name = "BLESense-";
-  name += ble_address[ble_address.length() - 5];
-  name += ble_address[ble_address.length() - 4];
-  name += ble_address[ble_address.length() - 2];
-  name += ble_address[ble_address.length() - 1];
+  ble_name = "BLESense-";
+  ble_name += ble_address[ble_address.length() - 5];
+  ble_name += ble_address[ble_address.length() - 4];
+  ble_name += ble_address[ble_address.length() - 2];
+  ble_name += ble_address[ble_address.length() - 1];
 
-  Serial.print("name = ");
-  Serial.println(name);
+  Serial.print("BLE name = ");
+  Serial.println(ble_name);
 
-  BLE.setLocalName(name.c_str());
-  BLE.setDeviceName(name.c_str());
-  BLE.setAdvertisedService(service);
+  BLE.setLocalName(ble_name.c_str());
+  BLE.setDeviceName(ble_name.c_str());
+  BLE.setAdvertisedService(ble_service);
 
-  service.addCharacteristic(strokeCharacteristic);
+  ble_service.addCharacteristic(ble_strokeCharacteristic);
 
-  BLE.addService(service);
+  BLE.addService(ble_service);
   BLE.advertise();
 
   // Set up logging. Google style is to avoid globals or statics because of
@@ -167,14 +168,14 @@ void loop()
   BLEDevice ble_central = BLE.central();
 
   // if a central is connected to the peripheral:
-  static bool was_connected_last = false;
-  if (ble_central && !was_connected_last)
+  static bool ble_was_connected_last = false;
+  if (ble_central && !ble_was_connected_last)
   {
     Serial.print("Connected to central: ");
     // print the central's BT address:
     Serial.println(ble_central.address());
   }
-  was_connected_last = ble_central;
+  ble_was_connected_last = ble_central;
 
   Serial.println("ALL GOOD");
   delay(1000);
