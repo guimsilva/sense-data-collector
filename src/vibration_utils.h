@@ -26,19 +26,18 @@ float acc_x, acc_y, acc_z;
 unsigned int sampling_period_us;
 unsigned long microseconds;
 
-/*
-These are the input and output vectors
-Input vectors receive computed results from FFT
-*/
+/**
+ * These are the input and output vectors
+ * Input vectors receive computed results from FFT
+ **/
 double vReal[SAMPLES];
 double vImag[SAMPLES];
 
+double dominantFrequency;
+const int vibrationSamplesBufferSize = 10;
+
 /* Create FFT object */
 ArduinoFFT<double> FFT = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
-
-const int vibrationSamplesBufferSize = 10;
-VibrationSample vibrationSamples[vibrationSamplesBufferSize];
-StaticJsonDocument<10240> doc;
 
 struct VibrationSample
 {
@@ -56,6 +55,9 @@ struct VibrationSample
     double dominantFrequency;
     unsigned long timestamp;
 };
+
+VibrationSample vibrationSamples[vibrationSamplesBufferSize];
+JsonDocument doc;
 
 /**
  * Sampling data and preparation for FFT conversion
@@ -160,15 +162,17 @@ void computeVibrationFFT(bool printResults = true)
     {
         Serial.println("Computed magnitudes:");
         printFFTVector(vReal, (SAMPLES >> 1), SCL_FREQUENCY);
-
-        double dominantFrequency = FFT.majorPeak();
+    }
+    dominantFrequency = FFT.majorPeak();
+    if (printResults)
+    {
         Serial.println(dominantFrequency, 6);
     }
 
     // Add the computed frequencies to vibrationSamples variable
     VibrationSample sample;
     sample.timestamp = millis();
-    sample.dominantFrequency = FFT.majorPeak();
+    sample.dominantFrequency = dominantFrequency;
     for (int i = 0; i < SAMPLES; i++)
     {
         sample.frequencies[i] = vReal[i];
