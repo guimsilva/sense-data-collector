@@ -19,6 +19,7 @@ limitations under the License.
 #define SAMPLES 512            // Must be a power of 2
 #define SAMPLING_FREQUENCY 512 // Hz. Determines maximum frequency that can be analysed by the FFT.
 
+// Used for printing FFT results
 #define SCL_INDEX 0x00
 #define SCL_TIME 0x01
 #define SCL_FREQUENCY 0x02
