@@ -38,7 +38,7 @@ void setup()
   }
 
   // // Start SD card
-  // if (!SD.begin(10))
+  // if (!SD.begin(A0))
   // {
   //   Serial.println("Failed to initialize SD card!");
   //   while (1)
