@@ -1,8 +1,11 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
+#include <SPI.h>
 #include <SD.h>
+#include <ArduinoBLE.h>
 
 #include "vibration_utils.h"
+#include "ble_utils.h"
 
 namespace
 {
@@ -37,13 +40,16 @@ void setup()
       ;
   }
 
-  // // Start SD card
-  // if (!SD.begin(A0))
-  // {
-  //   Serial.println("Failed to initialize SD card!");
-  //   while (1)
-  //     ;
-  // }
+  LOG_VIA_BLUETOOTH = true;
+  // Start BLE
+  if (!BLE.begin())
+  {
+    Serial.println("Failed to initialized BLE!");
+    while (1)
+      ;
+  }
+
+  bleSetup();
 }
 
 void loop()
@@ -51,12 +57,13 @@ void loop()
   // getAltitude();
 
   sampleVibration();
-  computeVibrationFFT();
+  computeVibrationFFT(false, LOG_VIA_BLUETOOTH);
+  bleComms();
 
-  while (1)
-    ;
+  // while (1)
+  //   ;
 
-  // delay(2000);
+  delay(2000);
 }
 
 void getAltitude()
