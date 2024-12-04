@@ -13,11 +13,9 @@ constexpr uint16_t vibrationSampleByteCount = 5120;
 uint8_t vibrationSampleBuffer[vibrationSampleByteCount];
 
 // BLE settings
-bool LOG_VIA_BLUETOOTH = false;
+bool LOG_VIA_BLUETOOTH = true;
 BLEService bleService(BLE_SENSE_UUID("0000"));
-BLECharacteristic bleVibSampleCharacteristic(BLE_SENSE_UUID("300a"), BLERead, vibrationSampleByteCount);
-BLEAdvertisingData advData;
-bool bleConnected = false;
+BLECharacteristic bleVibSampleCharacteristic(BLE_SENSE_UUID("300a"), BLERead | BLENotify, vibrationSampleByteCount);
 
 // String to calculate the local and device name
 String bleName;
@@ -47,8 +45,9 @@ void bleSetup()
     BLE.setAdvertisedService(bleService);
     bleService.addCharacteristic(bleVibSampleCharacteristic);
     BLE.addService(bleService);
-    advData.setAdvertisedService(bleService);
 
+    memset(vibrationSampleBuffer, 0, vibrationSampleByteCount);
+    bleVibSampleCharacteristic.writeValue(vibrationSampleBuffer, vibrationSampleByteCount);
     BLE.advertise();
 
     Serial.println("BLE setup done");
@@ -68,32 +67,41 @@ void bleComms()
     if (!bleCentral && !bleWasConnectedLast)
     {
         Serial.println("No central connected");
+        return;
     }
     else if (bleCentral && !bleWasConnectedLast)
     {
+        bleWasConnectedLast = true;
         Serial.print("Connected to central: ");
         Serial.println(bleCentral.address());
     }
     else if (!bleCentral && bleWasConnectedLast)
     {
+        bleWasConnectedLast = false;
         Serial.println("Disconnected from central");
+        return;
     }
-    bleWasConnectedLast = bleCentral;
+
+    if (JSON_DOC.isNull())
+    {
+        Serial.println("JSON_DOC is null/empty");
+        return;
+    }
 
     // Convert the JSON document to the vibrationSampleBuffer array of bytes
     size_t n = serializeJson(JSON_DOC, vibrationSampleBuffer);
+    serializeJson(JSON_DOC, vibrationSampleBuffer);
+    bleVibSampleCharacteristic.writeValue(vibrationSampleBuffer, vibrationSampleByteCount);
+    // bleVibSampleCharacteristic.broadcast();
+    // BLE.advertise();
+    // BLE.poll();
 
-    Serial.print("Sent ");
-    Serial.println(n);
-
-    advData.setAdvertisedServiceData(0xfff0, vibrationSampleBuffer, vibrationSampleByteCount);
-    BLE.setAdvertisingData(advData);
-    BLE.advertise();
+    JSON_DOC.clear();
 
     // // Clear the buffer
     // memset(vibrationSampleBuffer, 0, vibrationSampleByteCount);
 
-    BLE.poll();
+    Serial.print("Sent BLE data");
 }
 
 #endif // BLE_UTILS_H

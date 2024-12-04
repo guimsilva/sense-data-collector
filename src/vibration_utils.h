@@ -136,6 +136,7 @@ void saveVibrationSamplesToFile(bool logViaBluetooth = false)
         }
         serializeJson(JSON_DOC, file);
         file.close();
+        JSON_DOC.clear();
     }
 }
 
@@ -201,11 +202,16 @@ void computeVibrationFFT(bool printResults = true, bool logViaBluetooth = false)
     // Log data and reset the buffer when it's full
     if (vibrationSamples[VIBRATION_SAMPLES_BUFFER_SIZE - 1].timestamp != 0)
     {
+        Serial.println("Buffer full. Saving to file and resetting buffer");
         saveVibrationSamplesToFile(logViaBluetooth);
         for (int i = 0; i < VIBRATION_SAMPLES_BUFFER_SIZE; i++)
         {
             vibrationSamples[i] = VibrationSample();
         }
+    }
+    else
+    {
+        Serial.println("Buffer not full yet");
     }
 }
 

@@ -9,6 +9,9 @@
 
 namespace
 {
+  unsigned long previousMillis = 0; // Store the last time the data collection event occurred
+  const long interval = 2000;       // Interval at which to trigger the data collection event (milliseconds)
+
   // Pressure sensor
   float current_pressure = 0.0f;
   float new_pressure = 0.0f;
@@ -40,7 +43,6 @@ void setup()
       ;
   }
 
-  LOG_VIA_BLUETOOTH = true;
   // Start BLE
   if (!BLE.begin())
   {
@@ -48,22 +50,27 @@ void setup()
     while (1)
       ;
   }
-
   bleSetup();
 }
 
 void loop()
 {
+  unsigned long currentMillis = millis();
+  bool isTimeForDataCollection = currentMillis - previousMillis >= interval;
+
   // getAltitude();
 
-  sampleVibration();
-  computeVibrationFFT(false, LOG_VIA_BLUETOOTH);
+  if (isTimeForDataCollection)
+  {
+    previousMillis = currentMillis;
+    sampleVibration();
+    computeVibrationFFT(false, LOG_VIA_BLUETOOTH);
+  }
+
   bleComms();
 
   // while (1)
   //   ;
-
-  delay(2000);
 }
 
 void getAltitude()
