@@ -34,7 +34,7 @@ double vReal[SAMPLES];
 double vImag[SAMPLES];
 
 double dominantFrequency;
-const int vibrationSamplesBufferSize = 10;
+const int VIBRATION_SAMPLES_BUFFER_SIZE = 3;
 
 /* Create FFT object */
 ArduinoFFT<double> FFT = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
@@ -56,7 +56,7 @@ struct VibrationSample
     unsigned long timestamp;
 };
 
-VibrationSample vibrationSamples[vibrationSamplesBufferSize];
+VibrationSample vibrationSamples[VIBRATION_SAMPLES_BUFFER_SIZE];
 JsonDocument JSON_DOC;
 
 /**
@@ -110,7 +110,7 @@ void saveVibrationSamplesToFile(bool logViaBluetooth = false)
 {
     JSON_DOC.clear();
     JsonArray samples = JSON_DOC["samples"].to<JsonArray>();
-    for (int i = 0; i < vibrationSamplesBufferSize; i++)
+    for (int i = 0; i < VIBRATION_SAMPLES_BUFFER_SIZE; i++)
     {
         if (vibrationSamples[i].timestamp == 0)
         {
@@ -184,34 +184,28 @@ void computeVibrationFFT(bool printResults = true, bool logViaBluetooth = false)
     {
         sample.frequencies[i] = vReal[i];
     }
-    bool sampleAdded = false;
 
     Serial.print("Adding sample to buffer. Buffer size: ");
-    Serial.println(vibrationSamplesBufferSize);
-    for (int i = 0; i < vibrationSamplesBufferSize; i++)
+    Serial.println(VIBRATION_SAMPLES_BUFFER_SIZE);
+    for (int i = 0; i < VIBRATION_SAMPLES_BUFFER_SIZE; i++)
     {
         if (vibrationSamples[i].timestamp == 0)
         {
             vibrationSamples[i] = sample;
-            sampleAdded = true;
             Serial.print("Sample added at index: ");
             Serial.println(i);
             break;
         }
     }
-    // if sample added, save the samples to a file and reset the buffer
-    if (sampleAdded)
+
+    // Log data and reset the buffer when it's full
+    if (vibrationSamples[VIBRATION_SAMPLES_BUFFER_SIZE - 1].timestamp != 0)
     {
         saveVibrationSamplesToFile(logViaBluetooth);
-        // reset the buffer
-        for (int i = 0; i < vibrationSamplesBufferSize; i++)
+        for (int i = 0; i < VIBRATION_SAMPLES_BUFFER_SIZE; i++)
         {
             vibrationSamples[i] = VibrationSample();
         }
-    }
-    else
-    {
-        Serial.println("No sample added to buffer");
     }
 }
 

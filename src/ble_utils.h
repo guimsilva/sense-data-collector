@@ -65,11 +65,18 @@ void bleComms()
 
     // if a central is connected to the peripheral:
     static bool bleWasConnectedLast = false;
-    if (bleCentral && !bleWasConnectedLast)
+    if (!bleCentral && !bleWasConnectedLast)
+    {
+        Serial.println("No central connected");
+    }
+    else if (bleCentral && !bleWasConnectedLast)
     {
         Serial.print("Connected to central: ");
-        // print the central's BT address:
         Serial.println(bleCentral.address());
+    }
+    else if (!bleCentral && bleWasConnectedLast)
+    {
+        Serial.println("Disconnected from central");
     }
     bleWasConnectedLast = bleCentral;
 
