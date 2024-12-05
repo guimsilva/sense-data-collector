@@ -5,9 +5,45 @@
 #include "Arduino_BMI270_BMM150.h"
 #include "arduinoFFT.h"
 
-/**
- * Sampling data and preparation for FFT conversion
- **/
+Vibration::Vibration(SampleDataPoint *_sample, int16_t _samples, int16_t _samplingFrequency)
+    : samples(_samples),
+      samplingFrequency(_samplingFrequency),
+      vReal(new double[_samples]), vImag(new double[_samples]), dominantFrequency(0.0)
+{
+    sample = _sample;
+    samplingPeriodUs = round(1000000 * (1.0 / samplingFrequency));
+
+    /* Create FFT object */
+    FFT = ArduinoFFT<double>(vReal, vImag, _samples, _samplingFrequency);
+}
+
+void Vibration::printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
+{
+    for (uint16_t i = 0; i < bufferSize; i++)
+    {
+        double abscissa;
+        /* Print abscissa value */
+        switch (scaleType)
+        {
+        case sclIndex:
+            abscissa = (i * 1.0);
+            break;
+        case sclTime:
+            abscissa = ((i * 1.0) / samplingFrequency);
+            break;
+        case sclFrequency:
+            abscissa = ((i * 1.0 * samplingFrequency) / samples);
+            break;
+        }
+        Serial.print(abscissa, 6);
+        if (scaleType == sclFrequency)
+            Serial.print("Hz");
+        Serial.print(" ");
+        Serial.println(vData[i], 4);
+    }
+    Serial.println();
+}
+
 void Vibration::sampleVibration(bool printResults)
 {
     if (printResults)

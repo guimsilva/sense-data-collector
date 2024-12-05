@@ -28,62 +28,10 @@ private:
     // Barometer instance
     Barometer *barometer;
 
-    void saveSamplesToFile(bool printResults = true)
-    {
-        if (printResults)
-        {
-            Serial.println("Saving vibration samples to file");
-        }
-
-        jsonDoc.clear();
-        JsonArray jsonSamples = jsonDoc["samples"].to<JsonArray>();
-        for (int i = 0; i < samplesBufferSize; i++)
-        {
-            if (samples[i].timestamp == 0)
-            {
-                break;
-            }
-            JsonObject jsonSample = jsonSamples.add<JsonObject>();
-            jsonSample["timestamp"] = samples[i].timestamp;
-            jsonSample["dominantFrequency"] = samples[i].dominantFrequency;
-            JsonArray frequencies = jsonSample["frequencies"].to<JsonArray>();
-            for (int j = 0; j < vibrationSamples; j++)
-            {
-                frequencies.add(samples[i].frequencies[j]);
-            }
-        }
-
-        if (printResults)
-        {
-            serializeJsonPretty(jsonDoc, Serial);
-        }
-
-        // File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
-        // if (!file)
-        // {
-        //     Serial.println("Failed to open file for writing");
-        //     return;
-        // }
-        // serializeJson(jsonDoc, file);
-        // file.close();
-        // jsonDoc.clear();
-
-        if (printResults)
-        {
-            Serial.println("Vibration samples saved to file");
-        }
-    }
+    void saveSamplesToFile(bool printResults = true);
 
 public:
-    Sampler(int16_t _vibrationSamples = 512, int16_t _samplesBufferSize = 10)
-        : vibrationSamples(_vibrationSamples),
-          samplesBufferSize(_samplesBufferSize),
-          sample(new SampleDataPoint(_vibrationSamples)),
-          samples(new SampleDataPoint[_samplesBufferSize])
-    {
-        vibration = new Vibration(sample, 512, 512);
-        barometer = new Barometer(sample);
-    }
+    Sampler(int16_t _vibrationSamples = 512, int16_t _samplesBufferSize = 10);
 
     void sampleData(bool printResults = true);
 };
