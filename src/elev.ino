@@ -1,8 +1,5 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
-#include <SPI.h>
-#include <SD.h>
-#include <ArduinoBLE.h>
 
 #include "vibration_utils.h"
 
