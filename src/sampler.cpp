@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+
 #include "sampler.h"
 
-void Sampler::sampleData(bool printResults = true)
+void Sampler::sampleData(bool printResults)
 {
     Serial.println("Collecting vibration data...");
 

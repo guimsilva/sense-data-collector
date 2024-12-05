@@ -3,7 +3,7 @@
 
 #include "barometer.h"
 
-void Barometer::sampleBarometer(bool printResults = true)
+void Barometer::sampleBarometer(bool printResults)
 {
     if (printResults)
     {
