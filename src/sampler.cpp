@@ -13,7 +13,7 @@ Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize)
 {
     vibration = new Vibration(sample, 512, 512);
     barometer = new Barometer(sample);
-    // Instantiate the samples buffer
+
     for (int i = 0; i < samplesBufferSize; i++)
     {
         samples[i] = SampleDataPoint();
