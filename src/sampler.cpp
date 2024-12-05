@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <SPI.h>
+#include <SD.h>
 
 #include "sampler.h"
 
@@ -11,6 +13,11 @@ Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize)
 {
     vibration = new Vibration(sample, 512, 512);
     barometer = new Barometer(sample);
+    // Instantiate the samples buffer
+    for (int i = 0; i < samplesBufferSize; i++)
+    {
+        samples[i] = SampleDataPoint();
+    }
 }
 
 void Sampler::saveSamplesToFile(bool printResults)
@@ -43,15 +50,15 @@ void Sampler::saveSamplesToFile(bool printResults)
         serializeJsonPretty(jsonDoc, Serial);
     }
 
-    // File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
-    // if (!file)
-    // {
-    //     Serial.println("Failed to open file for writing");
-    //     return;
-    // }
-    // serializeJson(jsonDoc, file);
-    // file.close();
-    // jsonDoc.clear();
+    File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
+    if (!file)
+    {
+        Serial.println("Failed to open file for writing");
+        return;
+    }
+    serializeJson(jsonDoc, file);
+    file.close();
+    jsonDoc.clear();
 
     if (printResults)
     {
@@ -62,8 +69,12 @@ void Sampler::saveSamplesToFile(bool printResults)
 void Sampler::sampleData(bool printResults)
 {
     Serial.println("Collecting vibration data...");
-
     vibration->sampleVibration(printResults);
+    Serial.println("Vibration data collected");
+
+    Serial.println("Collecting barometer data...");
+    barometer->sampleBarometer(printResults);
+    Serial.println("Barometer data collected");
 
     Serial.print("Adding sample to buffer. Buffer size: ");
     Serial.println(samplesBufferSize);

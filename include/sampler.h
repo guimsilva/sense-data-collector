@@ -3,8 +3,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-// #include <SPI.h>
-// #include <SD.h>
+
 #include "sample.h"
 #include "vibration.h"
 #include "barometer.h"
