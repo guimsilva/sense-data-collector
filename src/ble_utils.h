@@ -5,23 +5,30 @@
 #include <ArduinoBLE.h>
 #include <ArduinoJson.h>
 
-#include "vibration_utils.h"
+/**
+ * This doesn't work for the purpose of collecting vibration samples because of the 512 bytes limit,
+ * so it's kept here for reference only and future BLE communication.
+ */
 
 #define BLE_SENSE_UUID(val) ("4798e0f2-" val "-4d68-af64-8a8f5258404e")
-
-// constexpr uint16_t vibrationSampleByteCount = 5120;
-// uint8_t vibrationSampleBuffer[vibrationSampleByteCount];
 
 // BLE settings
 bool LOG_VIA_BLUETOOTH = true;
 BLEService bleService(BLE_SENSE_UUID("0000"));
-BLEStringCharacteristic bleVibSampleCharacteristic(BLE_SENSE_UUID("300a"), BLERead | BLENotify, 51200);
+BLEStringCharacteristic bleVibSampleCharacteristic(BLE_SENSE_UUID("300a"), BLERead | BLENotify, 512); // Max size is 512 bytes
 
 // String to calculate the local and device name
 String bleName;
 
 void bleSetup()
 {
+    if (!BLE.begin())
+    {
+        Serial.println("Failed to initialized BLE!");
+        while (1)
+            ;
+    }
+
     // Configure BLE
     String bleAddress = BLE.address();
 
@@ -53,7 +60,7 @@ void bleSetup()
     Serial.println("BLE setup done");
 }
 
-void bleComms()
+void bleComms(JsonDocument &jsonDoc)
 {
     if (!LOG_VIA_BLUETOOTH)
     {
@@ -82,27 +89,27 @@ void bleComms()
         return;
     }
 
-    if (JSON_DOC.isNull())
+    if (jsonDoc.isNull())
     {
         Serial.println("JSON_DOC is null/empty");
         return;
     }
 
     // Convert the JSON document to the vibrationSampleBuffer array of bytes
-    size_t jsonSize = measureJson(JSON_DOC);
+    size_t jsonSize = measureJson(jsonDoc);
 
     Serial.print("JSON size: ");
     Serial.println(jsonSize);
 
     String vibrationSampleString;
-    serializeJson(JSON_DOC, vibrationSampleString);
+    serializeJson(jsonDoc, vibrationSampleString);
 
     // Serial.print("Sending BLE data: ");
     // Serial.println(vibrationSampleString);
 
     bleVibSampleCharacteristic.writeValue(vibrationSampleString);
 
-    JSON_DOC.clear();
+    jsonDoc.clear();
 
     Serial.print("Sent BLE data");
 }

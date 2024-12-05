@@ -106,7 +106,7 @@ void printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
     Serial.println();
 }
 
-void saveVibrationSamplesToFile(bool logViaBluetooth = false)
+void saveVibrationSamplesToFile()
 {
     JSON_DOC.clear();
     JsonArray samples = JSON_DOC["samples"].to<JsonArray>();
@@ -126,24 +126,21 @@ void saveVibrationSamplesToFile(bool logViaBluetooth = false)
         }
     }
 
-    if (!logViaBluetooth)
+    File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
+    if (!file)
     {
-        File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
-        if (!file)
-        {
-            Serial.println("Failed to open file for writing");
-            return;
-        }
-        serializeJson(JSON_DOC, file);
-        file.close();
-        JSON_DOC.clear();
+        Serial.println("Failed to open file for writing");
+        return;
     }
+    serializeJson(JSON_DOC, file);
+    file.close();
+    JSON_DOC.clear();
 }
 
 /**
  * Compute FFT and print results
  **/
-void computeVibrationFFT(bool printResults = true, bool logViaBluetooth = false)
+void computeVibrationFFT(bool printResults = true)
 {
     /* Print the results of the simulated sampling according to time */
     if (printResults)
@@ -203,7 +200,7 @@ void computeVibrationFFT(bool printResults = true, bool logViaBluetooth = false)
     if (vibrationSamples[VIBRATION_SAMPLES_BUFFER_SIZE - 1].timestamp != 0)
     {
         Serial.println("Buffer full. Saving to file and resetting buffer");
-        saveVibrationSamplesToFile(logViaBluetooth);
+        saveVibrationSamplesToFile();
         for (int i = 0; i < VIBRATION_SAMPLES_BUFFER_SIZE; i++)
         {
             vibrationSamples[i] = VibrationSample();

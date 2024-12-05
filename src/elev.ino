@@ -5,7 +5,6 @@
 #include <ArduinoBLE.h>
 
 #include "vibration_utils.h"
-#include "ble_utils.h"
 
 namespace
 {
@@ -42,15 +41,6 @@ void setup()
     while (1)
       ;
   }
-
-  // Start BLE
-  if (!BLE.begin())
-  {
-    Serial.println("Failed to initialized BLE!");
-    while (1)
-      ;
-  }
-  bleSetup();
 }
 
 void loop()
@@ -64,10 +54,8 @@ void loop()
   {
     previousMillis = currentMillis;
     sampleVibration();
-    computeVibrationFFT(false, LOG_VIA_BLUETOOTH);
+    computeVibrationFFT(false);
   }
-
-  bleComms();
 
   // while (1)
   //   ;
