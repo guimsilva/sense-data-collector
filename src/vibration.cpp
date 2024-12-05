@@ -3,7 +3,7 @@
 // #include <SPI.h>
 // #include <SD.h>
 
-#include "..\include\vibration.h"
+#include "vibration.h"
 #include "Arduino_BMI270_BMM150.h"
 #include "arduinoFFT.h"
 

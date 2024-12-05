@@ -2,7 +2,7 @@
 #include <Arduino_LPS22HB.h>
 
 #include "Arduino_BMI270_BMM150.h"
-#include "..\include\vibration.h"
+#include "vibration.h"
 
 namespace
 {
