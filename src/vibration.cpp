@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-// #include <SPI.h>
-// #include <SD.h>
 
 #include "vibration.h"
 #include "Arduino_BMI270_BMM150.h"
@@ -41,13 +39,15 @@ void Vibration::sampleVibration(bool printResults)
             }
         }
 
-        while (micros() < (microseconds + sampling_period_us))
+        while (micros() < (microseconds + samplingPeriodUs))
             ; // wait for next sample
     }
     if (printResults)
     {
         Serial.println("Vibration data sampled");
     }
+
+    computeVibrationFFT(printResults);
 }
 
 /**
@@ -92,39 +92,10 @@ void Vibration::computeVibrationFFT(bool printResults)
     }
 
     // Add the computed frequencies to vibrationSamples variable
-    VibrationSample sample;
-    sample.timestamp = millis();
-    sample.dominantFrequency = dominantFrequency;
+    sample->timestamp = millis();
+    sample->dominantFrequency = dominantFrequency;
     for (int i = 0; i < samples; i++)
     {
-        sample.frequencies[i] = vReal[i];
-    }
-
-    Serial.print("Adding sample to buffer. Buffer size: ");
-    Serial.println(vibrationSamplesBufferSize);
-    for (int i = 0; i < vibrationSamplesBufferSize; i++)
-    {
-        if (vibrationSamples[i].timestamp == 0)
-        {
-            vibrationSamples[i] = sample;
-            Serial.print("Sample added at index: ");
-            Serial.println(i);
-            break;
-        }
-    }
-
-    // Log data and reset the buffer when it's full
-    if (vibrationSamples[vibrationSamplesBufferSize - 1].timestamp != 0)
-    {
-        Serial.println("Buffer full. Saving to file and resetting buffer");
-        saveVibrationSamplesToFile(printResults);
-        for (int i = 0; i < vibrationSamplesBufferSize; i++)
-        {
-            vibrationSamples[i] = VibrationSample();
-        }
-    }
-    else
-    {
-        Serial.println("Buffer not full yet");
+        sample->frequencies[i] = vReal[i];
     }
 }

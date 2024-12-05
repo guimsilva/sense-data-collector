@@ -2,10 +2,11 @@
 #include <Arduino_LPS22HB.h>
 
 #include "Arduino_BMI270_BMM150.h"
-#include "vibration.h"
+#include "sampler.h"
 
 namespace
 {
+  // Time interval for data collection
   unsigned long previousMillis = 0;    // Store the last time the data collection event occurred
   const unsigned long interval = 2000; // Interval at which to trigger the data collection event (milliseconds)
 
@@ -14,10 +15,9 @@ namespace
   float new_pressure = 0.0f;
   float altitude = 0.0f;
 
-  // Vibration instance
-  Vibration *vibration = nullptr;
-
   bool isLogging = true;
+
+  Sampler *sample = nullptr;
 } // namespace
 
 void setup()
@@ -45,15 +45,13 @@ void setup()
       ;
   }
 
-  vibration = new Vibration(512, 512, 2);
+  sample = new Sampler(512, 10);
 }
 
 void loop()
 {
   unsigned long currentMillis = millis();
   bool isTimeForDataCollection = currentMillis - previousMillis >= interval;
-
-  // getAltitude();
 
   if (isTimeForDataCollection)
   {
@@ -63,8 +61,7 @@ void loop()
     }
 
     previousMillis = currentMillis;
-    vibration->sampleVibration();
-    vibration->computeVibrationFFT(isLogging);
+    sample->sampleData(isLogging);
 
     if (isLogging)
     {
@@ -74,19 +71,4 @@ void loop()
 
   // while (1)
   //   ;
-}
-
-void getAltitude()
-{
-  new_pressure = BARO.readPressure();
-  if (new_pressure != current_pressure)
-  {
-    current_pressure = new_pressure;
-    altitude = 44330 * (1 - pow(current_pressure / 101.325, 1 / 5.255));
-  }
-
-  Serial.print("Altitude according to kPa is = ");
-  Serial.print(altitude);
-  Serial.println(" m");
-  Serial.println();
 }

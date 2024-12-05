@@ -2,33 +2,17 @@
 #define VIBRATION_H
 
 #include <ArduinoJson.h>
-// #include <SPI.h>
-// #include <SD.h>
 
 #include "Arduino_BMI270_BMM150.h"
 #include "arduinoFFT.h"
-
-struct VibrationSample
-{
-    VibrationSample(int16_t samples = 512)
-        : dominantFrequency(0.0),
-          frequencies(new double[samples]),
-          timestamp(0)
-    {
-        for (int i = 0; i < samples; ++i)
-        {
-            frequencies[i] = 0.0;
-        }
-    }
-
-    double dominantFrequency;
-    double *frequencies;
-    unsigned long timestamp;
-};
+#include "sample.h"
 
 class Vibration
 {
 private:
+    // The sample data point reference
+    SampleDataPoint *sample;
+
     // Used for printing FFT results
     static const uint8_t sclIndex = 0x00;
     static const uint8_t sclTime = 0x01;
@@ -39,7 +23,7 @@ private:
     float accX, accY, accZ;
 
     // FFT sampling period and time
-    unsigned int sampling_period_us;
+    unsigned int samplingPeriodUs;
     unsigned long microseconds;
 
     /**
@@ -51,7 +35,6 @@ private:
     double dominantFrequency;
 
     ArduinoFFT<double> FFT;
-    VibrationSample *vibrationSamples;
 
     void printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
     {
@@ -80,70 +63,22 @@ private:
         Serial.println();
     }
 
-    void saveVibrationSamplesToFile(bool printResults = true)
-    {
-        if (printResults)
-        {
-            Serial.println("Saving vibration samples to file");
-        }
-
-        jsonDoc.clear();
-        JsonArray samples = jsonDoc["samples"].to<JsonArray>();
-        for (int i = 0; i < vibrationSamplesBufferSize; i++)
-        {
-            if (vibrationSamples[i].timestamp == 0)
-            {
-                break;
-            }
-            JsonObject sample = samples.add<JsonObject>();
-            sample["timestamp"] = vibrationSamples[i].timestamp;
-            sample["dominantFrequency"] = vibrationSamples[i].dominantFrequency;
-            JsonArray frequencies = sample["frequencies"].to<JsonArray>();
-            for (int j = 0; j < samples; j++)
-            {
-                frequencies.add(vibrationSamples[i].frequencies[j]);
-            }
-        }
-
-        if (printResults)
-        {
-            serializeJsonPretty(jsonDoc, Serial);
-        }
-
-        // File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
-        // if (!file)
-        // {
-        //     Serial.println("Failed to open file for writing");
-        //     return;
-        // }
-        // serializeJson(jsonDoc, file);
-        // file.close();
-        // jsonDoc.clear();
-
-        if (printResults)
-        {
-            Serial.println("Vibration samples saved to file");
-        }
-    }
-
 public:
-    Vibration(int16_t _samples = 512, int16_t _samplingFrequency = 512, int16_t _vibrationSamplesBufferSize = 10)
+    Vibration(SampleDataPoint *_sample, int16_t _samples = 512, int16_t _samplingFrequency = 512)
         : samples(_samples),
           samplingFrequency(_samplingFrequency),
-          vibrationSamplesBufferSize(_vibrationSamplesBufferSize),
           vReal(new double[_samples]), vImag(new double[_samples]), dominantFrequency(0.0)
     {
+        sample = _sample;
+        samplingPeriodUs = round(1000000 * (1.0 / samplingFrequency));
+
         /* Create FFT object */
         FFT = ArduinoFFT<double>(vReal, vImag, _samples, _samplingFrequency);
-        vibrationSamples = new VibrationSample(_vibrationSamplesBufferSize);
     }
 
     // x = 512 samples and sampling frequency y = 512 will result in 1 second of sampling (x / y = sec)
-    const int16_t samples;                    // Must be a power of 2
-    const int16_t samplingFrequency;          // Hz. Determines maximum frequency that can be analysed by the FFT.
-    const int16_t vibrationSamplesBufferSize; // Number of complete samples to be saved before writing to file
-
-    JsonDocument jsonDoc;
+    const int16_t samples;           // Must be a power of 2
+    const int16_t samplingFrequency; // Hz. Determines maximum frequency that can be analysed by the FFT.
 
     /**
      * Sampling data and preparation for FFT conversion
