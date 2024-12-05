@@ -1,17 +1,23 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
 
-#include "vibration_utils.h"
+#include "Arduino_BMI270_BMM150.h"
+#include "..\include\vibration.h"
 
 namespace
 {
-  unsigned long previousMillis = 0; // Store the last time the data collection event occurred
-  const long interval = 2000;       // Interval at which to trigger the data collection event (milliseconds)
+  unsigned long previousMillis = 0;    // Store the last time the data collection event occurred
+  const unsigned long interval = 2000; // Interval at which to trigger the data collection event (milliseconds)
 
   // Pressure sensor
   float current_pressure = 0.0f;
   float new_pressure = 0.0f;
   float altitude = 0.0f;
+
+  // Vibration instance
+  Vibration *vibration = nullptr;
+
+  bool isLogging = true;
 } // namespace
 
 void setup()
@@ -38,6 +44,8 @@ void setup()
     while (1)
       ;
   }
+
+  vibration = new Vibration(512, 512, 2);
 }
 
 void loop()
@@ -49,9 +57,19 @@ void loop()
 
   if (isTimeForDataCollection)
   {
+    if (isLogging)
+    {
+      Serial.println("Collecting vibration data...");
+    }
+
     previousMillis = currentMillis;
-    sampleVibration();
-    computeVibrationFFT(false);
+    vibration->sampleVibration();
+    vibration->computeVibrationFFT(isLogging);
+
+    if (isLogging)
+    {
+      Serial.println("Vibration data collected");
+    }
   }
 
   // while (1)
