@@ -9,13 +9,13 @@
 
 #define BLE_SENSE_UUID(val) ("4798e0f2-" val "-4d68-af64-8a8f5258404e")
 
-constexpr uint16_t vibrationSampleByteCount = 5120;
-uint8_t vibrationSampleBuffer[vibrationSampleByteCount];
+// constexpr uint16_t vibrationSampleByteCount = 5120;
+// uint8_t vibrationSampleBuffer[vibrationSampleByteCount];
 
 // BLE settings
 bool LOG_VIA_BLUETOOTH = true;
 BLEService bleService(BLE_SENSE_UUID("0000"));
-BLECharacteristic bleVibSampleCharacteristic(BLE_SENSE_UUID("300a"), BLERead | BLENotify, vibrationSampleByteCount);
+BLEStringCharacteristic bleVibSampleCharacteristic(BLE_SENSE_UUID("300a"), BLERead | BLENotify, 51200);
 
 // String to calculate the local and device name
 String bleName;
@@ -46,8 +46,8 @@ void bleSetup()
     bleService.addCharacteristic(bleVibSampleCharacteristic);
     BLE.addService(bleService);
 
-    memset(vibrationSampleBuffer, 0, vibrationSampleByteCount);
-    bleVibSampleCharacteristic.writeValue(vibrationSampleBuffer, vibrationSampleByteCount);
+    String initialVibSample = "{}";
+    bleVibSampleCharacteristic.writeValue(initialVibSample);
     BLE.advertise();
 
     Serial.println("BLE setup done");
@@ -89,17 +89,20 @@ void bleComms()
     }
 
     // Convert the JSON document to the vibrationSampleBuffer array of bytes
-    size_t n = serializeJson(JSON_DOC, vibrationSampleBuffer);
-    serializeJson(JSON_DOC, vibrationSampleBuffer);
-    bleVibSampleCharacteristic.writeValue(vibrationSampleBuffer, vibrationSampleByteCount);
-    // bleVibSampleCharacteristic.broadcast();
-    // BLE.advertise();
-    // BLE.poll();
+    size_t jsonSize = measureJson(JSON_DOC);
+
+    Serial.print("JSON size: ");
+    Serial.println(jsonSize);
+
+    String vibrationSampleString;
+    serializeJson(JSON_DOC, vibrationSampleString);
+
+    // Serial.print("Sending BLE data: ");
+    // Serial.println(vibrationSampleString);
+
+    bleVibSampleCharacteristic.writeValue(vibrationSampleString);
 
     JSON_DOC.clear();
-
-    // // Clear the buffer
-    // memset(vibrationSampleBuffer, 0, vibrationSampleByteCount);
 
     Serial.print("Sent BLE data");
 }
