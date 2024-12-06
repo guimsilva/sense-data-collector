@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
+#include <SPI.h>
+#include <SD.h>
 
 #include "Arduino_BMI270_BMM150.h"
 #include "sampler.h"
@@ -15,7 +17,7 @@ namespace
   float new_pressure = 0.0f;
   float altitude = 0.0f;
 
-  bool isLogging = true;
+  bool isLogging = false;
 
   Sampler *sample = nullptr;
 } // namespace
@@ -45,7 +47,15 @@ void setup()
       ;
   }
 
-  sample = new Sampler(512, 10);
+  // Start sd card
+  if (!SD.begin(A0))
+  {
+    Serial.println("Failed to initialize SD card!");
+    while (1)
+      ;
+  }
+
+  sample = new Sampler(512, 3);
 }
 
 void loop()

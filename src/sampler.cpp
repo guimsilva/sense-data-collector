@@ -22,10 +22,7 @@ Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize)
 
 void Sampler::saveSamplesToFile(bool printResults)
 {
-    if (printResults)
-    {
-        Serial.println("Saving vibration samples to file");
-    }
+    Serial.println("Saving samples to file");
 
     jsonDoc.clear();
     JsonArray jsonSamples = jsonDoc["samples"].to<JsonArray>();
@@ -45,12 +42,12 @@ void Sampler::saveSamplesToFile(bool printResults)
         }
     }
 
-    if (printResults)
-    {
-        serializeJsonPretty(jsonDoc, Serial);
-    }
+    // if (printResults)
+    // {
+    //     serializeJsonPretty(jsonDoc, Serial);
+    // }
 
-    File file = SD.open("/vibration_samples_" + String(millis()) + ".json", FILE_WRITE);
+    File file = SD.open("samples_" + String(millis()) + ".json", FILE_WRITE);
     if (!file)
     {
         Serial.println("Failed to open file for writing");
@@ -60,10 +57,7 @@ void Sampler::saveSamplesToFile(bool printResults)
     file.close();
     jsonDoc.clear();
 
-    if (printResults)
-    {
-        Serial.println("Vibration samples saved to file");
-    }
+    Serial.println("Samples saved to file");
 }
 
 void Sampler::sampleData(bool printResults)
