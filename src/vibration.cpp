@@ -14,7 +14,7 @@ Vibration::Vibration(SampleDataPoint *_sample, int16_t _samples, int16_t _sampli
     samplingPeriodUs = round(1000000 * (1.0 / samplingFrequency));
 
     /* Create FFT object */
-    FFT = ArduinoFFT<double>(vReal, vImag, _samples, samplingFrequency);
+    FFT = ArduinoFFT<double>(vReal, vImag, samples, samplingFrequency);
 }
 
 void Vibration::printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
