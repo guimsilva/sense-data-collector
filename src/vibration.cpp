@@ -14,7 +14,7 @@ Vibration::Vibration(SampleDataPoint *_sample, int16_t _samples, int16_t _sampli
     samplingPeriodUs = round(1000000 * (1.0 / samplingFrequency));
 
     /* Create FFT object */
-    FFT = ArduinoFFT<double>(vReal, vImag, _samples, _samplingFrequency);
+    FFT = ArduinoFFT<double>(vReal, vImag, _samples, samplingFrequency);
 }
 
 void Vibration::printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
@@ -48,7 +48,9 @@ void Vibration::sampleVibration(bool printResults)
 {
     if (printResults)
     {
-        Serial.println("Sampling vibration data for " + String(samples) + " samples...");
+        Serial.print("Sampling vibration data for ");
+        Serial.print(samples);
+        Serial.println(" samples...");
     }
     for (int i = 0; i < samples; i++)
     {
@@ -62,7 +64,12 @@ void Vibration::sampleVibration(bool printResults)
             IMU.readAcceleration(accX, accY, accZ);
             if (printResults)
             {
-                Serial.println("Acceleration read");
+                Serial.print("Acceleration read: ");
+                Serial.print(accX);
+                Serial.print(" ");
+                Serial.print(accY);
+                Serial.print(" ");
+                Serial.println(accZ);
             }
             vReal[i] = sqrt(accX * accX + accY * accY + accZ * accZ);
             vImag[i] = 0;
@@ -134,4 +141,17 @@ void Vibration::computeVibrationFFT(bool printResults)
     {
         sample->frequencies[i] = vReal[i];
     }
+
+    // Print the sample values
+    Serial.println("Sample half of the values values 1:");
+    for (int i = 0; i < samples / 2; i++)
+    {
+        Serial.print(sample->frequencies[i]);
+        Serial.print(" ");
+    }
+    Serial.print("dominantFrequency: ");
+    Serial.println(sample->dominantFrequency, 6);
+
+    while (1)
+        ;
 }

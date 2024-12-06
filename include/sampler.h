@@ -29,8 +29,14 @@ private:
 
     void saveSamplesToFile(bool printResults = true);
 
+    void resetSample();
+
 public:
-    Sampler(int16_t _vibrationSamples = 512, int16_t _samplesBufferSize = 10);
+    /**
+     * @param _vibrationSamples Number of samples to be collected - must be a power of 2
+     * @param _samplesBufferSize Number of complete samples to be saved before writing to file
+     */
+    Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize = 10);
 
     void sampleData(bool printResults = true);
 };

@@ -5,13 +5,28 @@
 
 #include "sampler.h"
 
+void Sampler::resetSample()
+{
+    sample->timestamp = 0;
+    sample->temperature = 0.0;
+    sample->pressure = 0.0;
+    sample->altitude = 0.0;
+    sample->movingStatus = 0;
+    sample->movingSpeed = 0;
+    sample->dominantFrequency = 0.0;
+    for (int j = 0; j < vibrationSamples; j++)
+    {
+        sample->frequencies[j] = 0.0;
+    }
+}
+
 Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize)
     : vibrationSamples(_vibrationSamples),
       samplesBufferSize(_samplesBufferSize),
       sample(new SampleDataPoint(_vibrationSamples)),
       samples(new SampleDataPoint[_samplesBufferSize])
 {
-    vibration = new Vibration(sample, 512, 512);
+    vibration = new Vibration(sample, vibrationSamples, 512);
     barometer = new Barometer(sample);
 
     for (int i = 0; i < samplesBufferSize; i++)
@@ -42,18 +57,25 @@ void Sampler::saveSamplesToFile(bool printResults)
         }
     }
 
-    // if (printResults)
-    // {
-    //     serializeJsonPretty(jsonDoc, Serial);
-    // }
+    // serializeJsonPretty(jsonDoc, Serial);
+    // while (1)
+    //     ;
 
-    File file = SD.open("samples_" + String(millis()) + ".json", FILE_WRITE);
+    // File file = SD.open("samples.txt", FILE_WRITE);
+    char filename[12];
+    snprintf(filename, sizeof(filename), "%lu.txt", millis() % 100000000);
+    File file = SD.open(filename, FILE_WRITE);
     if (!file)
     {
         Serial.println("Failed to open file for writing");
         return;
     }
+
     serializeJson(jsonDoc, file);
+    // String jsonStr;
+    // serializeJson(jsonDoc, jsonStr);
+    // file.println(jsonStr);
+
     file.close();
     jsonDoc.clear();
 
@@ -78,7 +100,11 @@ void Sampler::sampleData(bool printResults)
     {
         if (samples[i].timestamp == 0)
         {
-            samples[i] = *sample;
+            // Make a copy of sample and add it to the buffer
+            SampleDataPoint newSample = *sample;
+            samples[i] = newSample;
+            resetSample();
+
             Serial.print("Sample added at index: ");
             Serial.println(i);
             break;

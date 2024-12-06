@@ -9,17 +9,12 @@
 namespace
 {
   // Time interval for data collection
-  unsigned long previousMillis = 0;    // Store the last time the data collection event occurred
-  const unsigned long interval = 2000; // Interval at which to trigger the data collection event (milliseconds)
+  unsigned long previousMillis = 0;            // Store the last time the data collection event occurred
+  const unsigned long intervalInMillis = 2000; // Interval at which to trigger the data collection event (milliseconds)
 
-  // Pressure sensor
-  float current_pressure = 0.0f;
-  float new_pressure = 0.0f;
-  float altitude = 0.0f;
+  bool printResults = false;
 
-  bool isLogging = false;
-
-  Sampler *sample = nullptr;
+  Sampler *sampler;
 } // namespace
 
 void setup()
@@ -55,30 +50,27 @@ void setup()
       ;
   }
 
-  sample = new Sampler(512, 3);
+  sampler = new Sampler(512, 3);
 }
 
 void loop()
 {
   unsigned long currentMillis = millis();
-  bool isTimeForDataCollection = currentMillis - previousMillis >= interval;
+  bool isTimeForDataCollection = previousMillis == 0 || currentMillis - previousMillis >= intervalInMillis;
 
   if (isTimeForDataCollection)
   {
-    if (isLogging)
+    if (printResults)
     {
       Serial.println("Collecting vibration data...");
     }
 
     previousMillis = currentMillis;
-    sample->sampleData(isLogging);
+    sampler->sampleData(printResults);
 
-    if (isLogging)
+    if (printResults)
     {
       Serial.println("Vibration data collected");
     }
   }
-
-  // while (1)
-  //   ;
 }

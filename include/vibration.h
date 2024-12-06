@@ -43,6 +43,11 @@ private:
     void printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType);
 
 public:
+    /**
+     * @param _sample The sample data point reference
+     * @param _samples Number of samples to be collected - must be a power of 2
+     * @param _samplingFrequency Max sampling frequency in Hz
+     */
     Vibration(SampleDataPoint *_sample, int16_t _samples = 512, int16_t _samplingFrequency = 512);
 
     /**

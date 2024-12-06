@@ -88,7 +88,6 @@ namespace
         Serial.println("Failed to read acceleration data");
         break;
       }
-      // Serial.println(">>> DATA ACC X READ: " + String(current_acceleration_data[0]) + " <<<");
       *new_accelerometer_samples += 1;
     }
   }
