@@ -5,6 +5,21 @@
 
 #include "sampler.h"
 
+void Sampler::duplicateSample(SampleDataPoint *newSample)
+{
+    newSample->timestamp = sample->timestamp;
+    newSample->temperature = sample->temperature;
+    newSample->pressure = sample->pressure;
+    newSample->altitude = sample->altitude;
+    newSample->movingStatus = sample->movingStatus;
+    newSample->movingSpeed = sample->movingSpeed;
+    newSample->dominantFrequency = sample->dominantFrequency;
+    for (int j = 0; j < vibrationSamples; j++)
+    {
+        newSample->frequencies[j] = sample->frequencies[j];
+    }
+}
+
 void Sampler::resetSample()
 {
     sample->timestamp = 0;
@@ -31,7 +46,7 @@ Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize)
 
     for (int i = 0; i < samplesBufferSize; i++)
     {
-        samples[i] = SampleDataPoint();
+        samples[i] = SampleDataPoint(_vibrationSamples);
     }
 }
 
@@ -61,7 +76,6 @@ void Sampler::saveSamplesToFile(bool printResults)
     // while (1)
     //     ;
 
-    // File file = SD.open("samples.txt", FILE_WRITE);
     char filename[12];
     snprintf(filename, sizeof(filename), "%lu.txt", millis() % 100000000);
     File file = SD.open(filename, FILE_WRITE);
@@ -72,9 +86,6 @@ void Sampler::saveSamplesToFile(bool printResults)
     }
 
     serializeJson(jsonDoc, file);
-    // String jsonStr;
-    // serializeJson(jsonDoc, jsonStr);
-    // file.println(jsonStr);
 
     file.close();
     jsonDoc.clear();
@@ -100,9 +111,9 @@ void Sampler::sampleData(bool printResults)
     {
         if (samples[i].timestamp == 0)
         {
-            // Make a copy of sample and add it to the buffer
-            SampleDataPoint newSample = *sample;
-            samples[i] = newSample;
+            SampleDataPoint *newSample(new SampleDataPoint(vibrationSamples));
+            duplicateSample(newSample);
+            samples[i] = *newSample;
             resetSample();
 
             Serial.print("Sample added at index: ");

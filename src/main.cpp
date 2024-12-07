@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
-#include <SPI.h>
 #include <SD.h>
 
 #include "Arduino_BMI270_BMM150.h"

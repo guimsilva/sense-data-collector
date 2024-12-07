@@ -29,6 +29,8 @@ private:
 
     void saveSamplesToFile(bool printResults = true);
 
+    void duplicateSample(SampleDataPoint *newSample);
+
     void resetSample();
 
 public:

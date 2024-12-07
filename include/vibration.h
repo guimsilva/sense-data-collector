@@ -40,7 +40,7 @@ private:
 
     ArduinoFFT<double> FFT;
 
-    void printFFTVector(double *vData, uint16_t bufferSize, uint8_t scaleType);
+    void printFFTData(double *vData, uint16_t bufferSize, uint8_t scaleType);
 
 public:
     /**
