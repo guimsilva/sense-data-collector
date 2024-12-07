@@ -49,7 +49,7 @@ void setup()
       ;
   }
 
-  sampler = new Sampler(512, 3);
+  sampler = new Sampler(512, 512, 3);
 }
 
 void loop()

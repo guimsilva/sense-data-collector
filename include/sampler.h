@@ -29,16 +29,17 @@ private:
 
     void saveSamplesToFile(bool printResults = true);
 
-    void duplicateSample(SampleDataPoint *newSample);
+    void copySample(SampleDataPoint *newSample);
 
     void resetSample();
 
 public:
     /**
      * @param _vibrationSamples Number of samples to be collected - must be a power of 2
+     * @param _samplingFrequency Max sampling frequency in Hz
      * @param _samplesBufferSize Number of complete samples to be saved before writing to file
      */
-    Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize = 10);
+    Sampler(int16_t _vibrationSamples, int16_t _samplingFrequency = 512, int16_t _samplesBufferSize = 10);
 
     void sampleData(bool printResults = true);
 };

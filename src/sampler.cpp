@@ -5,7 +5,7 @@
 
 #include "sampler.h"
 
-void Sampler::duplicateSample(SampleDataPoint *newSample)
+void Sampler::copySample(SampleDataPoint *newSample)
 {
     newSample->timestamp = sample->timestamp;
     newSample->temperature = sample->temperature;
@@ -35,13 +35,13 @@ void Sampler::resetSample()
     }
 }
 
-Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplesBufferSize)
+Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplingFrequency, int16_t _samplesBufferSize)
     : vibrationSamples(_vibrationSamples),
       samplesBufferSize(_samplesBufferSize),
       sample(new SampleDataPoint(_vibrationSamples)),
       samples(new SampleDataPoint[_samplesBufferSize])
 {
-    vibration = new Vibration(sample, vibrationSamples, 512);
+    vibration = new Vibration(sample, vibrationSamples, _samplingFrequency);
     barometer = new Barometer(sample);
 
     for (int i = 0; i < samplesBufferSize; i++)
@@ -65,6 +65,12 @@ void Sampler::saveSamplesToFile(bool printResults)
         JsonObject jsonSample = jsonSamples.add<JsonObject>();
         jsonSample["timestamp"] = samples[i].timestamp;
         jsonSample["dominantFrequency"] = samples[i].dominantFrequency;
+        jsonSample["temperature"] = samples[i].temperature;
+        jsonSample["pressure"] = samples[i].pressure;
+        jsonSample["altitude"] = samples[i].altitude;
+        jsonSample["movingStatus"] = samples[i].movingStatus;
+        jsonSample["movingSpeed"] = samples[i].movingSpeed;
+
         JsonArray frequencies = jsonSample["frequencies"].to<JsonArray>();
         for (int j = 0; j < vibrationSamples; j++)
         {
@@ -112,7 +118,7 @@ void Sampler::sampleData(bool printResults)
         if (samples[i].timestamp == 0)
         {
             SampleDataPoint *newSample(new SampleDataPoint(vibrationSamples));
-            duplicateSample(newSample);
+            copySample(newSample);
             samples[i] = *newSample;
             resetSample();
 
