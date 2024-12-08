@@ -5,14 +5,14 @@
 #include <ArduinoJson.h>
 
 #include "sample.h"
-#include "vibration.h"
+#include "accelerometer.h"
 #include "barometer.h"
 
 class Sampler
 {
 private:
-    // Vibration samples
-    int16_t vibrationSamples;
+    // Accelerometer samples
+    int16_t accSamples;
     // The sample data point reference
     SampleDataPoint *sample;
     // The sample data point buffer
@@ -21,8 +21,8 @@ private:
     const int16_t samplesBufferSize; // Number of complete samples to be saved before writing to file
     JsonDocument jsonDoc;
 
-    // Vibration instance
-    Vibration *vibration;
+    // Accelerometer instance
+    Accelerometer *accelerometer;
 
     // Barometer instance
     Barometer *barometer;
@@ -35,11 +35,11 @@ private:
 
 public:
     /**
-     * @param _vibrationSamples Number of samples to be collected - must be a power of 2
+     * @param _accSamples Number of samples to be collected - must be a power of 2
      * @param _samplingFrequency Max sampling frequency in Hz
      * @param _samplesBufferSize Number of complete samples to be saved before writing to file
      */
-    Sampler(int16_t _vibrationSamples, int16_t _samplingFrequency = 512, int16_t _samplesBufferSize = 10);
+    Sampler(int16_t _accSamples, int16_t _samplingFrequency = 512, int16_t _samplesBufferSize = 10);
 
     void sampleData(bool printResults = true);
 };

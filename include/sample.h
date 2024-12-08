@@ -5,20 +5,24 @@
 
 struct SampleDataPoint
 {
-    SampleDataPoint(int16_t vibrationSamples = 512)
-        : dominantFrequency(0.0),
-          frequencies(new double[vibrationSamples]),
+    SampleDataPoint(int16_t accSamples = 512)
+        : frequenciesX(new double[accSamples]),
+          frequenciesY(new double[accSamples]),
+          frequenciesZ(new double[accSamples]),
           timestamp(0)
     {
-        for (int i = 0; i < vibrationSamples; ++i)
+        for (int i = 0; i < accSamples; ++i)
         {
-            frequencies[i] = 0.0;
+            frequenciesX[i] = 0.0;
+            frequenciesY[i] = 0.0;
+            frequenciesZ[i] = 0.0;
         }
     }
 
     // IMU acceleration sensor data
-    double dominantFrequency;
-    double *frequencies;
+    double *frequenciesX;
+    double *frequenciesY;
+    double *frequenciesZ;
 
     // Pressure sensor data
     double temperature;

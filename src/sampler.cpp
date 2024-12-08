@@ -13,10 +13,11 @@ void Sampler::copySample(SampleDataPoint *newSample)
     newSample->altitude = sample->altitude;
     newSample->movingStatus = sample->movingStatus;
     newSample->movingSpeed = sample->movingSpeed;
-    newSample->dominantFrequency = sample->dominantFrequency;
-    for (int j = 0; j < vibrationSamples; j++)
+    for (int j = 0; j < accSamples; j++)
     {
-        newSample->frequencies[j] = sample->frequencies[j];
+        newSample->frequenciesX[j] = sample->frequenciesX[j];
+        newSample->frequenciesY[j] = sample->frequenciesY[j];
+        newSample->frequenciesZ[j] = sample->frequenciesZ[j];
     }
 }
 
@@ -28,25 +29,26 @@ void Sampler::resetSample()
     sample->altitude = 0.0;
     sample->movingStatus = 0;
     sample->movingSpeed = 0;
-    sample->dominantFrequency = 0.0;
-    for (int j = 0; j < vibrationSamples; j++)
+    for (int j = 0; j < accSamples; j++)
     {
-        sample->frequencies[j] = 0.0;
+        sample->frequenciesX[j] = 0.0;
+        sample->frequenciesY[j] = 0.0;
+        sample->frequenciesZ[j] = 0.0;
     }
 }
 
-Sampler::Sampler(int16_t _vibrationSamples, int16_t _samplingFrequency, int16_t _samplesBufferSize)
-    : vibrationSamples(_vibrationSamples),
+Sampler::Sampler(int16_t _accSamples, int16_t _samplingFrequency, int16_t _samplesBufferSize)
+    : accSamples(_accSamples),
       samplesBufferSize(_samplesBufferSize),
-      sample(new SampleDataPoint(_vibrationSamples)),
+      sample(new SampleDataPoint(_accSamples)),
       samples(new SampleDataPoint[_samplesBufferSize])
 {
-    vibration = new Vibration(sample, vibrationSamples, _samplingFrequency);
+    accelerometer = new Accelerometer(sample, accSamples, _samplingFrequency);
     barometer = new Barometer(sample);
 
     for (int i = 0; i < samplesBufferSize; i++)
     {
-        samples[i] = SampleDataPoint(_vibrationSamples);
+        samples[i] = SampleDataPoint(_accSamples);
     }
 }
 
@@ -64,17 +66,20 @@ void Sampler::saveSamplesToFile(bool printResults)
         }
         JsonObject jsonSample = jsonSamples.add<JsonObject>();
         jsonSample["timestamp"] = samples[i].timestamp;
-        jsonSample["dominantFrequency"] = samples[i].dominantFrequency;
         jsonSample["temperature"] = samples[i].temperature;
         jsonSample["pressure"] = samples[i].pressure;
         jsonSample["altitude"] = samples[i].altitude;
         jsonSample["movingStatus"] = samples[i].movingStatus;
         jsonSample["movingSpeed"] = samples[i].movingSpeed;
 
-        JsonArray frequencies = jsonSample["frequencies"].to<JsonArray>();
-        for (int j = 0; j < vibrationSamples; j++)
+        JsonArray frequenciesX = jsonSample["frequenciesX"].to<JsonArray>();
+        JsonArray frequenciesY = jsonSample["frequenciesY"].to<JsonArray>();
+        JsonArray frequenciesZ = jsonSample["frequenciesZ"].to<JsonArray>();
+        for (int j = 0; j < accSamples; j++)
         {
-            frequencies.add(samples[i].frequencies[j]);
+            frequenciesX.add(samples[i].frequenciesX[j]);
+            frequenciesY.add(samples[i].frequenciesY[j]);
+            frequenciesZ.add(samples[i].frequenciesZ[j]);
         }
     }
 
@@ -101,13 +106,11 @@ void Sampler::saveSamplesToFile(bool printResults)
 
 void Sampler::sampleData(bool printResults)
 {
-    Serial.println("Collecting vibration data...");
-    vibration->sampleVibration(printResults);
-    Serial.println("Vibration data collected");
-
-    Serial.println("Collecting barometer data...");
+    accelerometer->sampleAcceleration(printResults);
     barometer->sampleBarometer(printResults);
-    Serial.println("Barometer data collected");
+
+    // while (1)
+    //     ;
 
     Serial.print("Adding sample to buffer. Buffer size: ");
     Serial.println(samplesBufferSize);
@@ -117,7 +120,7 @@ void Sampler::sampleData(bool printResults)
     {
         if (samples[i].timestamp == 0)
         {
-            SampleDataPoint *newSample(new SampleDataPoint(vibrationSamples));
+            SampleDataPoint *newSample(new SampleDataPoint(accSamples));
             copySample(newSample);
             samples[i] = *newSample;
             resetSample();
@@ -132,7 +135,7 @@ void Sampler::sampleData(bool printResults)
     if (samples[samplesBufferSize - 1].timestamp != 0)
     {
         Serial.println("Buffer full. Saving to file and resetting buffer");
-        saveSamplesToFile(printResults);
+        // saveSamplesToFile(printResults);
         for (int i = 0; i < samplesBufferSize; i++)
         {
             samples[i] = SampleDataPoint();

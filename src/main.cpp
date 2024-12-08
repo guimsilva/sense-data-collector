@@ -9,9 +9,9 @@ namespace
 {
   // Time interval for data collection
   unsigned long previousMillis = 0;            // Store the last time the data collection event occurred
-  const unsigned long intervalInMillis = 2000; // Interval at which to trigger the data collection event (milliseconds)
+  const unsigned long intervalInMillis = 1000; // Interval at which to trigger the data collection event (milliseconds)
 
-  bool printResults = false;
+  bool printResults = true;
 
   Sampler *sampler;
 } // namespace
@@ -32,6 +32,9 @@ void setup()
       ;
   }
   IMU.setContinuousMode();
+  float accSampleRate = IMU.accelerationSampleRate();
+  Serial.println("IMU acc sampling rate: ");
+  Serial.println(accSampleRate);
 
   // Start pressure sensor
   if (!BARO.begin())
@@ -49,7 +52,7 @@ void setup()
       ;
   }
 
-  sampler = new Sampler(512, 512, 3);
+  sampler = new Sampler(256, accSampleRate, 10);
 }
 
 void loop()
@@ -61,7 +64,7 @@ void loop()
   {
     if (printResults)
     {
-      Serial.println("Collecting vibration data...");
+      Serial.println("Collecting acc data...");
     }
 
     previousMillis = currentMillis;
@@ -69,7 +72,7 @@ void loop()
 
     if (printResults)
     {
-      Serial.println("Vibration data collected");
+      Serial.println("Acc data collected");
     }
   }
 }
