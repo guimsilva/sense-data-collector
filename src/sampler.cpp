@@ -165,7 +165,7 @@ void Sampler::sampleData()
 
             if (options->logLevel >= LogLevel::Info)
             {
-                Serial.print("Sample added");
+                Serial.println("Sample added");
             }
             break;
         }
