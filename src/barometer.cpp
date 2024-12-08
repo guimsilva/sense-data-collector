@@ -8,6 +8,11 @@ Barometer::Barometer(SampleDataPoint *_sample, SamplerOptions *_options)
     : options(_options),
       sample(_sample)
 {
+    if (options->logLevel >= LogLevel::Info)
+    {
+        Serial.println("Initializing barometer");
+    }
+
     // Start pressure sensor
     if (!BARO.begin())
     {
@@ -18,7 +23,7 @@ Barometer::Barometer(SampleDataPoint *_sample, SamplerOptions *_options)
 
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.println("Barometer initialized");
+        Serial.println("Barometer initialized\n");
     }
 }
 
@@ -34,7 +39,6 @@ void Barometer::getPressure()
     Serial.print("Altitude according to kPa is = ");
     Serial.print(altitude);
     Serial.println(" m");
-    Serial.println();
 }
 
 void Barometer::getTemperature()
@@ -43,7 +47,6 @@ void Barometer::getTemperature()
     Serial.print("Temperature is = ");
     Serial.print(temperature);
     Serial.println(" C");
-    Serial.println();
 }
 
 /** @todo fix/improve this */
@@ -70,7 +73,6 @@ void Barometer::getMovingStatus()
         Serial.print("Moving speed: ");
         Serial.print(movingSpeed);
         Serial.println(" kPa/s");
-        Serial.println();
     }
 }
 
@@ -89,7 +91,7 @@ void Barometer::sampleBarometer()
 
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.println("Pressure data sampled");
+        Serial.println("Pressure data sampled\n");
     }
 
     if (options->logLevel >= LogLevel::Info)
@@ -102,6 +104,6 @@ void Barometer::sampleBarometer()
 
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.println("Temperature data sampled");
+        Serial.println("Temperature data sampled\n");
     }
 }

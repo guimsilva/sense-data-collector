@@ -1,18 +1,21 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
+#include "options.h"
 #include "accelerometer.h"
 #include "Arduino_BMI270_BMM150.h"
 
 Accelerometer::Accelerometer(SampleDataPoint *_sample, SamplerOptions *_options)
     : options(_options),
       sample(_sample),
-      nummSamples(_options->accNumSamples),
-      samplingFrequency(_options->samplingFrequency),
       vRealX(new double[_options->accNumSamples]),
       vRealY(new double[_options->accNumSamples]),
       vRealZ(new double[_options->accNumSamples])
 {
+    if (options->logLevel >= LogLevel::Info)
+    {
+        Serial.println("Initializing accelerometer");
+    }
+
     // Start IMU
     if (!IMU.begin())
     {
@@ -22,20 +25,19 @@ Accelerometer::Accelerometer(SampleDataPoint *_sample, SamplerOptions *_options)
     }
     IMU.setContinuousMode();
 
-    samplingPeriodUs = round(1000000 * (1.0 / samplingFrequency));
+    if (options->accSamplingFrequency == 0)
+    {
+        _options->accSamplingFrequency = IMU.accelerationSampleRate();
+    }
+
+    samplingPeriodUs = round(1000000 * (1.0 / options->accSamplingFrequency));
 
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.println("Accelerometer initialized");
         float accSampleRate = IMU.accelerationSampleRate();
-        Serial.println("IMU acc real sampling rate: ");
-        Serial.println(accSampleRate);
-
-        // Double check values from constructor
-        Serial.print("Acc samples: ");
-        Serial.println(nummSamples);
-        Serial.print("Sampling max frequency: ");
-        Serial.println(samplingFrequency);
+        Serial.println("Accelerometer initialized with options (AccNumSamples, AccSamplingFrequency):");
+        Serial.println(options->accNumSamples);
+        Serial.println(options->accSamplingFrequency);
         Serial.println();
     }
 }
@@ -44,11 +46,9 @@ void Accelerometer::sampleAcceleration()
 {
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.print("Sampling acc data for ");
-        Serial.print(nummSamples);
-        Serial.println(" samples...");
+        Serial.print("Sampling acc data...");
     }
-    for (int i = 0; i < nummSamples; i++)
+    for (int i = 0; i < options->accNumSamples; i++)
     {
         microseconds = micros();
         if (IMU.accelerationAvailable())
@@ -87,7 +87,7 @@ void Accelerometer::sampleAcceleration()
 
     // Add the frequencies to `sample.frequencies` variables
     sample->timestamp = millis();
-    for (int i = 0; i < nummSamples; i++)
+    for (int i = 0; i < options->accNumSamples; i++)
     {
         double frequencyX = vRealX[i];
         double frequencyY = vRealY[i];
@@ -104,6 +104,6 @@ void Accelerometer::sampleAcceleration()
 
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.println("Acc data sampled");
+        Serial.println("Acc data sampled\n");
     }
 }

@@ -14,10 +14,6 @@ private:
     // The sample data point reference
     SampleDataPoint *sample;
 
-    // x = 512 samples and sampling frequency y = 512 will result in 1 second of sampling (x / y = sec)
-    const int16_t nummSamples;       // Must be a power of 2
-    const int16_t samplingFrequency; // Hz. Determines maximum frequency
-
     // IMU sensor
     float accX, accY, accZ;
 
@@ -33,8 +29,7 @@ private:
 public:
     /**
      * @param _sample The sample data point reference
-     * @param _numSamples Number of samples to be collected - must be a power of 2
-     * @param _samplingFrequency Max sampling frequency in Hz
+     * @param _options The sampler options
      */
     Accelerometer(SampleDataPoint *_sample, SamplerOptions *_options);
 

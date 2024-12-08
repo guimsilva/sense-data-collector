@@ -5,52 +5,13 @@
 
 #include "sampler.h"
 
-void Sampler::copySample(SampleDataPoint *newSample)
-{
-    newSample->timestamp = sample->timestamp;
-    newSample->temperature = sample->temperature;
-    newSample->pressure = sample->pressure;
-    newSample->altitude = sample->altitude;
-    newSample->movingStatus = sample->movingStatus;
-    newSample->movingSpeed = sample->movingSpeed;
-    for (int j = 0; j < accNumSamples; j++)
-    {
-        newSample->frequenciesX[j] = sample->frequenciesX[j];
-        newSample->frequenciesY[j] = sample->frequenciesY[j];
-        newSample->frequenciesZ[j] = sample->frequenciesZ[j];
-    }
-}
-
-void Sampler::resetSample()
-{
-    sample->timestamp = 0;
-    sample->temperature = 0.0;
-    sample->pressure = 0.0;
-    sample->altitude = 0.0;
-    sample->movingStatus = 0;
-    sample->movingSpeed = 0;
-    for (int j = 0; j < accNumSamples; j++)
-    {
-        sample->frequenciesX[j] = 0.0;
-        sample->frequenciesY[j] = 0.0;
-        sample->frequenciesZ[j] = 0.0;
-    }
-}
-
 Sampler::Sampler(SamplerOptions *_options)
     : options(_options),
-      accNumSamples(_options->accNumSamples),
-      samplesBufferSize(_options->samplesBufferSize),
       sample(new SampleDataPoint(_options->accNumSamples)),
       samples(new SampleDataPoint[_options->samplesBufferSize])
 {
-    accelerometer = new Accelerometer(sample, options);
-    barometer = new Barometer(sample, options);
-
-    for (int i = 0; i < samplesBufferSize; i++)
-    {
-        samples[i] = SampleDataPoint(options->accNumSamples);
-    }
+    if (options->logLevel >= LogLevel::Info)
+        Serial.println("\nInitializing sampler\n");
 
     if (options->saveToSdCard)
     {
@@ -63,6 +24,56 @@ Sampler::Sampler(SamplerOptions *_options)
         if (options->logLevel >= LogLevel::Info)
             Serial.println("SD card initialized");
     }
+
+    accelerometer = new Accelerometer(sample, options);
+    barometer = new Barometer(sample, options);
+
+    previousMillis = 0;
+    currentMillis = 0;
+    isTimeForDataCollection = false;
+
+    if (options->logLevel >= LogLevel::Info)
+    {
+        Serial.println("Sampler initialized with options (Interval, AccNumSamples, AccSamplingFrequency, SamplesBufferSize, SaveToSdCard):");
+        Serial.println(options->intervalInMillis);
+        Serial.println(options->accNumSamples);
+        Serial.println(options->accSamplingFrequency);
+        Serial.println(options->samplesBufferSize);
+        Serial.println(options->saveToSdCard);
+        Serial.println();
+    }
+}
+
+void Sampler::copySample(SampleDataPoint *newSample)
+{
+    newSample->timestamp = sample->timestamp;
+    newSample->temperature = sample->temperature;
+    newSample->pressure = sample->pressure;
+    newSample->altitude = sample->altitude;
+    newSample->movingStatus = sample->movingStatus;
+    newSample->movingSpeed = sample->movingSpeed;
+    for (int j = 0; j < options->accNumSamples; j++)
+    {
+        newSample->frequenciesX[j] = sample->frequenciesX[j];
+        newSample->frequenciesY[j] = sample->frequenciesY[j];
+        newSample->frequenciesZ[j] = sample->frequenciesZ[j];
+    }
+}
+
+void Sampler::resetSample(SampleDataPoint *_sample)
+{
+    _sample->timestamp = 0;
+    _sample->temperature = 0.0;
+    _sample->pressure = 0.0;
+    _sample->altitude = 0.0;
+    _sample->movingStatus = 0;
+    _sample->movingSpeed = 0;
+    for (int j = 0; j < options->accNumSamples; j++)
+    {
+        _sample->frequenciesX[j] = 0.0;
+        _sample->frequenciesY[j] = 0.0;
+        _sample->frequenciesZ[j] = 0.0;
+    }
 }
 
 void Sampler::saveSamplesToFile()
@@ -72,7 +83,7 @@ void Sampler::saveSamplesToFile()
 
     jsonDoc.clear();
     JsonArray jsonSamples = jsonDoc["samples"].to<JsonArray>();
-    for (int i = 0; i < samplesBufferSize; i++)
+    for (int i = 0; i < options->samplesBufferSize; i++)
     {
         if (samples[i].timestamp == 0)
         {
@@ -89,7 +100,7 @@ void Sampler::saveSamplesToFile()
         JsonArray frequenciesX = jsonSample["frequenciesX"].to<JsonArray>();
         JsonArray frequenciesY = jsonSample["frequenciesY"].to<JsonArray>();
         JsonArray frequenciesZ = jsonSample["frequenciesZ"].to<JsonArray>();
-        for (int j = 0; j < accNumSamples; j++)
+        for (int j = 0; j < options->accNumSamples; j++)
         {
             frequenciesX.add(samples[i].frequenciesX[j]);
             frequenciesY.add(samples[i].frequenciesY[j]);
@@ -103,7 +114,7 @@ void Sampler::saveSamplesToFile()
     // while (1)
     //     ;
 
-    char filename[12];
+    char filename[13];
     snprintf(filename, sizeof(filename), "%lu.txt", millis() % 100000000);
     File file = SD.open(filename, FILE_WRITE);
     if (!file)
@@ -123,53 +134,76 @@ void Sampler::saveSamplesToFile()
 
 void Sampler::sampleData()
 {
+    currentMillis = millis();
+    isTimeForDataCollection = previousMillis == 0 || currentMillis - previousMillis >= options->intervalInMillis;
+    if (!isTimeForDataCollection)
+        return;
+
+    previousMillis = currentMillis;
+
     accelerometer->sampleAcceleration();
     barometer->sampleBarometer();
 
     // while (1)
     //     ;
 
-    if (options->logLevel >= LogLevel::Info)
-    {
-        Serial.print("Adding sample to buffer. Buffer size: ");
-        Serial.println(samplesBufferSize);
-    }
-
     // Buffer should always have space for a new sample because it's reset when it's full, right below
-    for (int i = 0; i < samplesBufferSize; i++)
+    for (int i = 0; i < options->samplesBufferSize; i++)
     {
         if (samples[i].timestamp == 0)
         {
-            SampleDataPoint *newSample(new SampleDataPoint(accNumSamples));
+            if (options->logLevel >= LogLevel::Info)
+            {
+                Serial.print("Adding sample at index: ");
+                Serial.println(i);
+            }
+
+            SampleDataPoint *newSample(new SampleDataPoint(options->accNumSamples));
             copySample(newSample);
             samples[i] = *newSample;
-            resetSample();
+            resetSample(sample);
 
-            if (options->logLevel >= LogLevel::Verbose)
+            if (options->logLevel >= LogLevel::Info)
             {
-                Serial.print("Sample added at index: ");
-                Serial.println(i);
+                Serial.print("Sample added");
             }
             break;
         }
     }
 
     // Log data and reset the buffer when it's full
-    if (samples[samplesBufferSize - 1].timestamp != 0)
+    if (samples[options->samplesBufferSize - 1].timestamp != 0)
     {
         if (options->logLevel >= LogLevel::Info)
-            Serial.println("Buffer full. Saving to file and resetting buffer");
+            Serial.println("\nBuffer full. Saving to file and resetting buffer");
 
-        saveSamplesToFile();
-
-        for (int i = 0; i < samplesBufferSize; i++)
+        if (options->saveToSdCard)
         {
-            samples[i] = SampleDataPoint();
+            saveSamplesToFile();
+            if (options->logLevel >= LogLevel::Info)
+                Serial.println("Saved to SD card\n");
         }
+        else
+        {
+            if (options->logLevel >= LogLevel::Info)
+                Serial.println("Not saving to SD card\n");
+        }
+
+        if (options->logLevel >= LogLevel::Verbose)
+            Serial.println("Resetting buffer\n");
+
+        // Reset each sample in the buffer
+        for (int i = 0; i < options->samplesBufferSize; i++)
+        {
+            resetSample(&samples[i]);
+        }
+
+        if (options->logLevel >= LogLevel::Verbose)
+            Serial.println("Buffer reset\n");
     }
     else
     {
         if (options->logLevel >= LogLevel::Info)
-            Serial.println("Buffer not full yet");
+            Serial.println("Buffer not full yet\n");
     }
 }

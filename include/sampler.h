@@ -14,33 +14,33 @@ class Sampler
 private:
     SamplerOptions *options;
 
-    // Accelerometer # of samples
-    int16_t accNumSamples;
     // The sample data point reference
     SampleDataPoint *sample;
     // The sample data point buffer
     SampleDataPoint *samples;
 
-    const int16_t samplesBufferSize; // Number of complete samples to be saved before writing to file
-    JsonDocument jsonDoc;
-
     // Accelerometer instance
     Accelerometer *accelerometer;
-
     // Barometer instance
     Barometer *barometer;
+
+    // Time interval for data collection
+    unsigned long previousMillis; // Store the last time the data collection event occurred
+    unsigned long currentMillis;
+    bool isTimeForDataCollection;
+
+    // Temporarily stores the sample json to be saved to file
+    JsonDocument jsonDoc;
 
     void saveSamplesToFile();
 
     void copySample(SampleDataPoint *newSample);
 
-    void resetSample();
+    void resetSample(SampleDataPoint *_sample);
 
 public:
     /**
-     * @param _accSamples Number of samples to be collected - must be a power of 2
-     * @param _samplingFrequency Max sampling frequency in Hz
-     * @param _samplesBufferSize Number of complete samples to be saved before writing to file
+     * @param _options The sampler options
      */
     Sampler(SamplerOptions *_options);
 
