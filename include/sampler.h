@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+#include "options.h"
 #include "sample.h"
 #include "accelerometer.h"
 #include "barometer.h"
@@ -11,8 +12,10 @@
 class Sampler
 {
 private:
-    // Accelerometer samples
-    int16_t accSamples;
+    SamplerOptions *options;
+
+    // Accelerometer # of samples
+    int16_t accNumSamples;
     // The sample data point reference
     SampleDataPoint *sample;
     // The sample data point buffer
@@ -27,7 +30,7 @@ private:
     // Barometer instance
     Barometer *barometer;
 
-    void saveSamplesToFile(bool printResults = true);
+    void saveSamplesToFile();
 
     void copySample(SampleDataPoint *newSample);
 
@@ -39,9 +42,9 @@ public:
      * @param _samplingFrequency Max sampling frequency in Hz
      * @param _samplesBufferSize Number of complete samples to be saved before writing to file
      */
-    Sampler(int16_t _accSamples, int16_t _samplingFrequency = 512, int16_t _samplesBufferSize = 10);
+    Sampler(SamplerOptions *_options);
 
-    void sampleData(bool printResults = true);
+    void sampleData();
 };
 
 #endif // SAMPLER_H

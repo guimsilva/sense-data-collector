@@ -1,11 +1,25 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
 
+#include "options.h"
 #include "barometer.h"
 
-Barometer::Barometer(SampleDataPoint *_sample)
+Barometer::Barometer(SampleDataPoint *_sample, SamplerOptions *_options)
+    : options(_options),
+      sample(_sample)
 {
-    sample = _sample;
+    // Start pressure sensor
+    if (!BARO.begin())
+    {
+        Serial.println("Failed to initialize pressure sensor!");
+        while (1)
+            ;
+    }
+
+    if (options->logLevel >= LogLevel::Info)
+    {
+        Serial.println("Barometer initialized");
+    }
 }
 
 void Barometer::getPressure()
@@ -49,17 +63,20 @@ void Barometer::getMovingStatus()
     // This is probably not right
     movingStatus = isMoving ? (movingSpeed > 0 ? 1 : 2) : 0;
 
-    Serial.print("Moving status: ");
-    Serial.println(isMoving ? "Moving" : "Stopped");
-    Serial.print("Moving speed: ");
-    Serial.print(movingSpeed);
-    Serial.println(" kPa/s");
-    Serial.println();
+    if (options->logLevel >= LogLevel::Verbose)
+    {
+        Serial.print("Moving status: ");
+        Serial.println(isMoving ? "Moving" : "Stopped");
+        Serial.print("Moving speed: ");
+        Serial.print(movingSpeed);
+        Serial.println(" kPa/s");
+        Serial.println();
+    }
 }
 
-void Barometer::sampleBarometer(bool printResults)
+void Barometer::sampleBarometer()
 {
-    if (printResults)
+    if (options->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling pressure data...");
     }
@@ -70,12 +87,12 @@ void Barometer::sampleBarometer(bool printResults)
     sample->movingStatus = movingStatus;
     sample->movingSpeed = movingSpeed;
 
-    if (printResults)
+    if (options->logLevel >= LogLevel::Info)
     {
         Serial.println("Pressure data sampled");
     }
 
-    if (printResults)
+    if (options->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling temperature data...");
     }
@@ -83,7 +100,7 @@ void Barometer::sampleBarometer(bool printResults)
     getTemperature();
     sample->temperature = temperature;
 
-    if (printResults)
+    if (options->logLevel >= LogLevel::Info)
     {
         Serial.println("Temperature data sampled");
     }

@@ -4,11 +4,13 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
 
+#include "options.h"
 #include "sample.h"
 
 class Barometer
 {
 private:
+    SamplerOptions *options;
     // The sample data point reference
     SampleDataPoint *sample;
 
@@ -29,9 +31,9 @@ private:
     void getMovingStatus();
 
 public:
-    Barometer(SampleDataPoint *_sample);
+    Barometer(SampleDataPoint *_sample, SamplerOptions *_options);
 
-    void sampleBarometer(bool printResults = true);
+    void sampleBarometer();
 };
 
 #endif // BAROMETER_H
