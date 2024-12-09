@@ -5,7 +5,7 @@
 
 namespace
 {
-  SamplerOptions *options;
+  SamplerOptions *samplerOptions;
   Sampler *sampler;
 } // namespace
 
@@ -14,10 +14,10 @@ void setup()
   Serial.begin(9600);
   while (!Serial)
     ;
-  Serial.println("Serial started");
+  Serial.println("Serial started\n");
 
-  options = new SamplerOptions(2000, 256, 0, 5, LogLevel::Info, true);
-  sampler = new Sampler(options);
+  samplerOptions = new SamplerOptions(2000, 256, 0, 10, LogLevel::Info, true);
+  sampler = new Sampler(samplerOptions);
 }
 
 void loop()
