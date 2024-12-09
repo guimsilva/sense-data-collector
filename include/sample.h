@@ -8,8 +8,7 @@ struct SampleDataPoint
     SampleDataPoint(int16_t accSamples = 512)
         : frequenciesX(new double[accSamples]),
           frequenciesY(new double[accSamples]),
-          frequenciesZ(new double[accSamples]),
-          timestamp(0)
+          frequenciesZ(new double[accSamples])
     {
         for (int i = 0; i < accSamples; ++i)
         {
@@ -17,6 +16,12 @@ struct SampleDataPoint
             frequenciesY[i] = 0.0;
             frequenciesZ[i] = 0.0;
         }
+        temperatureC = 0.0;
+        pressureKpa = 0.0;
+        altitudeMeters = 0.0;
+        movingStatus = 0;
+        movingSpeed = 0;
+        timestamp = 0;
     }
 
     // IMU acceleration sensor data

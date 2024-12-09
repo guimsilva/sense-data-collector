@@ -15,7 +15,7 @@ struct SamplerOptions
     /**
      * @param _intervalInMillis Interval at which allow data collection (milliseconds). Default is 2000
      * @param _accSamples Number of samples to be collected - must be a power of 2. Default is 256
-     * @param _samplingFrequency Max acc sampling frequency in Hz. If left default 0, it will get the max sampling frequency from the IMU
+     * @param _accSamplingFrequency Max acc sampling frequency in Hz. If left default 0, it will get the max sampling frequency from the IMU
      * @param _samplesBufferSize Number of whole sample data points to be collected before saving to file. Default is 10
      * @param _logLevel The log level. Default is Info
      * @param _saveToSdCard Whether to save the data to the SD card. Default is true

@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include <SD.h>
+// #include <TaskScheduler.h>
 
 #include "sampler.h"
 
@@ -158,9 +159,7 @@ void Sampler::sampleData()
                 Serial.println(i);
             }
 
-            SampleDataPoint *newSample(new SampleDataPoint(options->accNumSamples));
-            copySample(newSample);
-            samples[i] = *newSample;
+            copySample(&samples[i]);
             resetSample(sample);
 
             if (options->logLevel >= LogLevel::Info)

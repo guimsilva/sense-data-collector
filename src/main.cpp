@@ -14,9 +14,9 @@ void setup()
   Serial.begin(9600);
   while (!Serial)
     ;
-  Serial.println("Serial started\n");
+  Serial.println("\nSerial started\n");
 
-  samplerOptions = new SamplerOptions(2000, 256, 0, 10, LogLevel::Info, true);
+  samplerOptions = new SamplerOptions(3000, 256, 0, 5, LogLevel::Info, true);
   sampler = new Sampler(samplerOptions);
 }
 

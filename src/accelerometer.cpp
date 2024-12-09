@@ -46,7 +46,7 @@ void Accelerometer::sampleAcceleration()
 {
     if (options->logLevel >= LogLevel::Info)
     {
-        Serial.print("Sampling acc data...");
+        Serial.println("Sampling acc data...");
     }
     for (int i = 0; i < options->accNumSamples; i++)
     {
