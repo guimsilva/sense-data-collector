@@ -47,9 +47,9 @@ Sampler::Sampler(SamplerOptions *_options)
 void Sampler::copySample(SampleDataPoint *newSample)
 {
     newSample->timestamp = sample->timestamp;
-    newSample->temperature = sample->temperature;
-    newSample->pressure = sample->pressure;
-    newSample->altitude = sample->altitude;
+    newSample->temperatureC = sample->temperatureC;
+    newSample->pressureKpa = sample->pressureKpa;
+    newSample->altitudeMeters = sample->altitudeMeters;
     newSample->movingStatus = sample->movingStatus;
     newSample->movingSpeed = sample->movingSpeed;
     for (int j = 0; j < options->accNumSamples; j++)
@@ -63,9 +63,9 @@ void Sampler::copySample(SampleDataPoint *newSample)
 void Sampler::resetSample(SampleDataPoint *_sample)
 {
     _sample->timestamp = 0;
-    _sample->temperature = 0.0;
-    _sample->pressure = 0.0;
-    _sample->altitude = 0.0;
+    _sample->temperatureC = 0.0;
+    _sample->pressureKpa = 0.0;
+    _sample->altitudeMeters = 0.0;
     _sample->movingStatus = 0;
     _sample->movingSpeed = 0;
     for (int j = 0; j < options->accNumSamples; j++)
@@ -91,9 +91,9 @@ void Sampler::saveSamplesToFile()
         }
         JsonObject jsonSample = jsonSamples.add<JsonObject>();
         jsonSample["timestamp"] = samples[i].timestamp;
-        jsonSample["temperature"] = samples[i].temperature;
-        jsonSample["pressure"] = samples[i].pressure;
-        jsonSample["altitude"] = samples[i].altitude;
+        jsonSample["temperatureC"] = samples[i].temperatureC;
+        jsonSample["pressureKpa"] = samples[i].pressureKpa;
+        jsonSample["altitudeM"] = samples[i].altitudeMeters;
         jsonSample["movingStatus"] = samples[i].movingStatus;
         jsonSample["movingSpeed"] = samples[i].movingSpeed;
 

@@ -30,32 +30,32 @@ Barometer::Barometer(SampleDataPoint *_sample, SamplerOptions *_options)
 void Barometer::getPressure()
 {
     newPressure = BARO.readPressure();
-    if (newPressure != currentPressure)
+    if (newPressure != currentPressureKpa)
     {
-        currentPressure = newPressure;
-        altitude = 44330 * (1 - pow(currentPressure / 101.325, 1 / 5.255));
+        currentPressureKpa = newPressure;
+        altitudeMeters = 44330 * (1 - pow(currentPressureKpa / 101.325, 1 / 5.255));
     }
 
     Serial.print("Altitude according to kPa is = ");
-    Serial.print(altitude);
+    Serial.print(altitudeMeters);
     Serial.println(" m");
 }
 
 void Barometer::getTemperature()
 {
-    temperature = BARO.readTemperature();
+    temperatureC = BARO.readTemperature();
     Serial.print("Temperature is = ");
-    Serial.print(temperature);
+    Serial.print(temperatureC);
     Serial.println(" C");
 }
 
 /** @todo fix/improve this */
 void Barometer::getMovingStatus()
 {
-    if (currentPressure != newPressure)
+    if (currentPressureKpa != newPressure)
     {
         isMoving = true;
-        movingSpeed = (currentPressure - newPressure) / 2;
+        movingSpeed = (currentPressureKpa - newPressure) / 2;
     }
     else
     {
@@ -84,8 +84,8 @@ void Barometer::sampleBarometer()
     }
 
     getPressure();
-    sample->pressure = currentPressure;
-    sample->altitude = altitude;
+    sample->pressureKpa = currentPressureKpa;
+    sample->altitudeMeters = altitudeMeters;
     sample->movingStatus = movingStatus;
     sample->movingSpeed = movingSpeed;
 
@@ -100,7 +100,7 @@ void Barometer::sampleBarometer()
     }
 
     getTemperature();
-    sample->temperature = temperature;
+    sample->temperatureC = temperatureC;
 
     if (options->logLevel >= LogLevel::Info)
     {

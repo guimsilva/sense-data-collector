@@ -14,10 +14,10 @@ private:
     // The sample data point reference
     SampleDataPoint *sample;
 
-    float currentPressure = 0.0f;
+    float currentPressureKpa = 0.0f;
     float newPressure = 0.0f;
-    float altitude = 0.0f;
-    float temperature = 0.0f;
+    float altitudeMeters = 0.0f;
+    float temperatureC = 0.0f;
 
     bool isMoving = false;
     float movingSpeed = 0.0f;

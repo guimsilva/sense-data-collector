@@ -25,9 +25,9 @@ struct SampleDataPoint
     double *frequenciesZ;
 
     // Pressure sensor data
-    double temperature;
-    double pressure;
-    double altitude;
+    double temperatureC;
+    double pressureKpa;
+    double altitudeMeters;
 
     // Combined
     /**
