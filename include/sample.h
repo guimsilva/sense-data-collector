@@ -6,33 +6,38 @@
 struct SampleDataPoint
 {
     SampleDataPoint(int16_t accSamples = 512)
-        : frequenciesX(new double[accSamples]),
-          frequenciesY(new double[accSamples]),
-          frequenciesZ(new double[accSamples])
+        : accFrequenciesX(new double[accSamples]),
+          accFequenciesY(new double[accSamples]),
+          accFrequenciesZ(new double[accSamples]),
+          audioBuffer(nullptr)
     {
-        for (int i = 0; i < accSamples; ++i)
-        {
-            frequenciesX[i] = 0.0;
-            frequenciesY[i] = 0.0;
-            frequenciesZ[i] = 0.0;
-        }
         temperatureC = 0.0;
         pressureKpa = 0.0;
         altitudeMeters = 0.0;
         movingStatus = 0;
         movingSpeed = 0;
         timestamp = 0;
-    }
 
-    // IMU acceleration sensor data
-    double *frequenciesX;
-    double *frequenciesY;
-    double *frequenciesZ;
+        for (int i = 0; i < accSamples; ++i)
+        {
+            accFrequenciesX[i] = 0.0;
+            accFequenciesY[i] = 0.0;
+            accFrequenciesZ[i] = 0.0;
+        }
+    }
 
     // Pressure sensor data
     double temperatureC;
     double pressureKpa;
     double altitudeMeters;
+
+    // IMU acceleration sensor data
+    double *accFrequenciesX;
+    double *accFequenciesY;
+    double *accFrequenciesZ;
+
+    // Audio sensor data
+    int16_t *audioBuffer;
 
     // Combined
     /**

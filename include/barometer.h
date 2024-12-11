@@ -2,7 +2,6 @@
 #define BAROMETER_H
 
 #include <Arduino.h>
-#include <Arduino_LPS22HB.h>
 
 #include "options.h"
 #include "sample.h"
@@ -10,9 +9,9 @@
 class Barometer
 {
 private:
-    SamplerOptions *options;
+    SamplerOptions *sampleOptions;
     // The sample data point reference
-    SampleDataPoint *sample;
+    SampleDataPoint *sampleDataPoint;
 
     float currentPressureKpa = 0.0f;
     float newPressure = 0.0f;
@@ -31,7 +30,7 @@ private:
     void getMovingStatus();
 
 public:
-    Barometer(SampleDataPoint *_sample, SamplerOptions *_options);
+    Barometer(SampleDataPoint *_sampleDataPoint, SamplerOptions *_samplerOptions);
 
     void sampleBarometer();
 };
