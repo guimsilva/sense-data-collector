@@ -5,10 +5,10 @@
 
 struct SampleDataPoint
 {
-    SampleDataPoint(int16_t accSamples = 512)
-        : accFrequenciesX(new double[accSamples]),
-          accFequenciesY(new double[accSamples]),
-          accFrequenciesZ(new double[accSamples]),
+    SampleDataPoint(int16_t accNumSamples = 256)
+        : accFrequenciesX(new double[accNumSamples]),
+          accFequenciesY(new double[accNumSamples]),
+          accFrequenciesZ(new double[accNumSamples]),
           audioBuffer(nullptr)
     {
         temperatureC = 0.0;
@@ -18,7 +18,7 @@ struct SampleDataPoint
         movingSpeed = 0;
         timestamp = 0;
 
-        for (int i = 0; i < accSamples; ++i)
+        for (int i = 0; i < accNumSamples; ++i)
         {
             accFrequenciesX[i] = 0.0;
             accFequenciesY[i] = 0.0;

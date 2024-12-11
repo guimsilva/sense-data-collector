@@ -89,7 +89,7 @@ void Sampler::resetSample(SampleDataPoint *_sample)
         _sample->accFrequenciesZ[j] = 0.0;
     }
 
-    for (int j = 0; j < static_cast<int>(sizeof(_sample->audioBuffer) / sizeof(_sample->audioBuffer[0])); j++)
+    for (int j = 0; j < samplerOptions->micNumSamples; j++)
     {
         _sample->audioBuffer[j] = 0;
     }
@@ -277,7 +277,7 @@ void Sampler::sampleData()
         else
         {
             if (samplerOptions->logLevel >= LogLevel::Info)
-                Serial.println("Not saving to SD card\n");
+                Serial.println("Skipping and not saving to SD card\n");
         }
 
         if (samplerOptions->logLevel >= LogLevel::Verbose)

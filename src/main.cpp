@@ -16,7 +16,7 @@ void setup()
     ;
   Serial.println("\nSerial started\n");
 
-  samplerOptions = new SamplerOptions(5000, 256, 0, 16000, 5, LogLevel::Verbose, false);
+  samplerOptions = new SamplerOptions(5000, 256, 0, 16000, 5, LogLevel::Info, false);
   sampler = new Sampler(samplerOptions);
 
   Serial.println("Completed setup()\n");

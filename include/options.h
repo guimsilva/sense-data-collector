@@ -43,7 +43,6 @@ struct SamplerOptions
     // Interval at which allow data collection (milliseconds)
     const unsigned long intervalInMillis;
 
-    int accSamplingLengthMs;      // Calculated in acc constructor. e.g. x = 256 samples and sampling frequency y = 100 will result in ~2560 milliseconds of sampling (x / y * 1000 = millisecs)
     int16_t accNumSamples;        // Must be a power of 2
     int16_t accSamplingFrequency; // Hz. Determines maximum frequency
 
@@ -53,6 +52,10 @@ struct SamplerOptions
     bool saveToSdCard;
 
     LogLevel logLevel;
+
+    // Internal i.e. not set by user
+    int accSamplingLengthMs; // Calculated in acc constructor. e.g. x = 256 samples and sampling frequency y = 100 will result in ~2560 milliseconds of sampling (x / y * 1000 = millisecs)
+    int micNumSamples;       // Calculated in the mic constructor e.g. micSamplingRate * accSamplingLengthMs / 1000
 };
 
 #endif // OPTIONS_H

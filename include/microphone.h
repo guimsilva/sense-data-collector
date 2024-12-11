@@ -12,13 +12,8 @@ private:
     SampleDataPoint *sampleDataPoint;
 
     static const int16_t tempBufferSize = 256; // Temporary buffer size
-    int16_t tempAudioBuffer[tempBufferSize];   // Temporary buffer
-    int16_t *audioBuffer;                      // The full audio buffer
+    int16_t *tempAudioBuffer;                  // Temporary buffer
     int sampleIndex = 0;                       // The current sample index
-    int totalSamples;                          // The total number of samples to be collected
-
-    void copyAudioBuffer();
-    void resetAudioBuffer();
 
 public:
     /**
