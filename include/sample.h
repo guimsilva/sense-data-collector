@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "config.h"
+
 struct SampleDataPoint
 {
     SampleDataPoint(int16_t accNumSamples = 256)
@@ -14,7 +16,7 @@ struct SampleDataPoint
         temperatureC = 0.0;
         pressureKpa = 0.0;
         altitudeMeters = 0.0;
-        movingStatus = 0;
+        movingStatus = MovingStatus::Stopped;
         movingSpeed = 0;
         timestamp = 0;
 
@@ -39,18 +41,7 @@ struct SampleDataPoint
     // Audio sensor data
     int16_t *audioBuffer;
 
-    // Combined
-    /**
-     * variable for moving status:
-     * 0 - stopped
-     * 1 - steady moving up
-     * 2 - steady moving down
-     * 3 - breaking moving up
-     * 4 - breaking moving down
-     * 5 - accelerating moving up
-     * 6 - accelerating moving down
-     **/
-    int8_t movingStatus;
+    MovingStatus movingStatus;
     int8_t movingSpeed;
 
     unsigned long timestamp;

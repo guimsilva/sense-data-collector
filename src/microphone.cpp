@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "options.h"
+#include "config.h"
 #include "microphone.h"
 #include "PDM.h"
 

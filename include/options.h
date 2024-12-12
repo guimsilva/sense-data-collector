@@ -2,13 +2,7 @@
 #define OPTIONS_H
 
 #include <Arduino.h>
-
-enum class LogLevel
-{
-    None,
-    Info,
-    Verbose,
-};
+#include "config.h"
 
 struct SamplerOptions
 {

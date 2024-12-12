@@ -2,6 +2,7 @@
 #include <Arduino_LPS22HB.h>
 
 #include "sampler.h"
+#include "config.h"
 
 namespace
 {

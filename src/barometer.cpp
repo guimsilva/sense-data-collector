@@ -2,6 +2,7 @@
 #include <Arduino_LPS22HB.h>
 
 #include "options.h"
+#include "config.h"
 #include "barometer.h"
 
 Barometer::Barometer(SampleDataPoint *_sampleDataPoint, SamplerOptions *_samplerOptions)
@@ -64,7 +65,7 @@ void Barometer::getMovingStatus()
     }
 
     // This is probably not right
-    movingStatus = isMoving ? (movingSpeed > 0 ? 1 : 2) : 0;
+    movingStatus = isMoving ? (movingSpeed > 0 ? MovingStatus::Steady : MovingStatus::Stopped) : MovingStatus::Stopped;
 
     if (sampleOptions->logLevel >= LogLevel::Verbose)
     {

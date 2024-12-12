@@ -5,6 +5,7 @@
 
 #include "Arduino_BMI270_BMM150.h"
 #include "sampler.h"
+#include "config.h"
 
 Sampler::Sampler(SamplerOptions *_samplerOptions)
     : samplerOptions(_samplerOptions),
@@ -79,7 +80,7 @@ void Sampler::resetSample(SampleDataPoint *_sample)
     _sample->temperatureC = 0.0;
     _sample->pressureKpa = 0.0;
     _sample->altitudeMeters = 0.0;
-    _sample->movingStatus = 0;
+    _sample->movingStatus = MovingStatus::Stopped;
     _sample->movingSpeed = 0;
 
     for (int j = 0; j < samplerOptions->accNumSamples; j++)
@@ -113,7 +114,7 @@ void Sampler::saveSamplesToFile()
         jsonSample["temperatureC"] = sampleDataPoints[i].temperatureC;
         jsonSample["pressureKpa"] = sampleDataPoints[i].pressureKpa;
         jsonSample["altitudeM"] = sampleDataPoints[i].altitudeMeters;
-        jsonSample["movingStatus"] = sampleDataPoints[i].movingStatus;
+        jsonSample["movingStatus"] = (int)sampleDataPoints[i].movingStatus;
         jsonSample["movingSpeed"] = sampleDataPoints[i].movingSpeed;
 
         JsonArray frequenciesX = jsonSample["frequenciesX"].to<JsonArray>();

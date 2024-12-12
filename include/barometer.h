@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "options.h"
+#include "config.h"
 #include "sample.h"
 
 class Barometer
@@ -20,7 +21,7 @@ private:
 
     bool isMoving = false;
     float movingSpeed = 0.0f;
-    int8_t movingStatus = 0;
+    MovingStatus movingStatus = MovingStatus::Stopped;
 
     void getPressure();
 
