@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+#include "config.h"
 #include "options.h"
 #include "sample.h"
 #include "accelerometer.h"
@@ -13,7 +14,8 @@
 class Sampler
 {
 private:
-    SamplerOptions *samplerOptions;
+    // The sampler configuration
+    SamplerConfig *samplerConfig;
 
     // The sample data point reference
     SampleDataPoint *sampleDataPoint;
@@ -55,8 +57,9 @@ public:
     /**
      * @param _options The sampler options
      */
-    Sampler(SamplerOptions *_samplerOptions);
+    Sampler(SamplerConfig *_samplerConfig);
 
+    void checkTriggers();
     void sampleData();
 };
 

@@ -7,15 +7,15 @@
 #include "sampler.h"
 #include "config.h"
 
-Sampler::Sampler(SamplerOptions *_samplerOptions)
-    : samplerOptions(_samplerOptions),
-      sampleDataPoint(new SampleDataPoint(_samplerOptions->accNumSamples)),
-      sampleDataPoints(new SampleDataPoint[_samplerOptions->sampleDataPointBufferSize])
+Sampler::Sampler(SamplerConfig *_samplerConfig)
+    : samplerConfig(_samplerConfig),
+      sampleDataPoint(new SampleDataPoint(_samplerConfig->samplerOptions->accNumSamples)),
+      sampleDataPoints(new SampleDataPoint[_samplerConfig->samplerOptions->sampleDataPointBufferSize])
 {
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
         Serial.println("\nInitializing sampler\n");
 
-    if (samplerOptions->saveToSdCard)
+    if (samplerConfig->samplerOptions->saveToSdCard)
     {
         if (!SD.begin(A0))
         {
@@ -23,31 +23,59 @@ Sampler::Sampler(SamplerOptions *_samplerOptions)
             while (1)
                 ;
         }
-        if (samplerOptions->logLevel >= LogLevel::Info)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             Serial.println("SD card initialized");
     }
     else
     {
-        if (samplerOptions->logLevel >= LogLevel::Info)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             Serial.println("Skipping SD card");
     }
 
-    accelerometer = new Accelerometer(samplerOptions);
-    barometer = new Barometer(sampleDataPoint, samplerOptions);
-    microphone = new Microphone(sampleDataPoint, samplerOptions);
+    accelerometer = new Accelerometer(samplerConfig->samplerOptions);
+    barometer = new Barometer(sampleDataPoint, samplerConfig->samplerOptions);
+    microphone = new Microphone(sampleDataPoint, samplerConfig->samplerOptions);
 
     previousMillis = 0;
     currentMillis = 0;
     isTimeForDataCollection = false;
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
-        Serial.println("Sampler initialized with options (Interval, AccNumSamples, AccSamplingFrequency, AccDataPointBufferSize, SaveToSdCard):");
-        Serial.println(samplerOptions->intervalInMillis);
-        Serial.println(samplerOptions->accNumSamples);
-        Serial.println(samplerOptions->accSamplingFrequency);
-        Serial.println(samplerOptions->sampleDataPointBufferSize);
-        Serial.println(samplerOptions->saveToSdCard);
+        Serial.println("Sampler initialized with config..:");
+        Serial.println("Triggers:");
+        for (int i = 0; i < sizeof(samplerConfig->triggers) / sizeof(samplerConfig->triggers[0]); i++)
+        {
+            Serial.print((int)samplerConfig->triggers[i]);
+            if (i < sizeof(samplerConfig->triggers) / sizeof(samplerConfig->triggers[0]) - 1)
+            {
+                Serial.print(", ");
+            }
+        }
+        Serial.println();
+        Serial.println("Data sensors:");
+        for (int i = 0; i < sizeof(samplerConfig->dataSensors) / sizeof(samplerConfig->dataSensors[0]); i++)
+        {
+            Serial.print((int)samplerConfig->dataSensors[i]);
+            if (i < sizeof(samplerConfig->dataSensors) / sizeof(samplerConfig->dataSensors[0]) - 1)
+            {
+                Serial.print(", ");
+            }
+        }
+        Serial.println();
+        Serial.println("Interval in millis:");
+        Serial.println(samplerConfig->intervalMsTrigger);
+        Serial.println("Movement triggers:");
+        Serial.println((int)std::get<0>(samplerConfig->movementTriggers[0]) + " - " + (int)std::get<1>(samplerConfig->movementTriggers[1]));
+        Serial.println("Acc threshold:");
+        Serial.print((int)samplerConfig->accThresholdTrigger[0] + " ");
+        Serial.print((int)samplerConfig->accThresholdTrigger[1] + " ");
+        Serial.println((int)samplerConfig->accThresholdTrigger[2]);
+        Serial.println("and options (AccNumSamples, AccSamplingFrequency, AccDataPointBufferSize, SaveToSdCard):");
+        Serial.println(samplerConfig->samplerOptions->accNumSamples);
+        Serial.println(samplerConfig->samplerOptions->accSamplingFrequency);
+        Serial.println(samplerConfig->samplerOptions->sampleDataPointBufferSize);
+        Serial.println(samplerConfig->samplerOptions->saveToSdCard);
         Serial.println();
     }
 }
@@ -61,7 +89,7 @@ void Sampler::copySample(SampleDataPoint *newSample)
     newSample->movingStatus = sampleDataPoint->movingStatus;
     newSample->movingSpeed = sampleDataPoint->movingSpeed;
 
-    for (int j = 0; j < samplerOptions->accNumSamples; j++)
+    for (int j = 0; j < samplerConfig->samplerOptions->accNumSamples; j++)
     {
         newSample->accFrequenciesX[j] = sampleDataPoint->accFrequenciesX[j];
         newSample->accFequenciesY[j] = sampleDataPoint->accFequenciesY[j];
@@ -83,14 +111,14 @@ void Sampler::resetSample(SampleDataPoint *_sample)
     _sample->movingStatus = MovingStatus::Stopped;
     _sample->movingSpeed = 0;
 
-    for (int j = 0; j < samplerOptions->accNumSamples; j++)
+    for (int j = 0; j < samplerConfig->samplerOptions->accNumSamples; j++)
     {
         _sample->accFrequenciesX[j] = 0.0;
         _sample->accFequenciesY[j] = 0.0;
         _sample->accFrequenciesZ[j] = 0.0;
     }
 
-    for (int j = 0; j < samplerOptions->micNumSamples; j++)
+    for (int j = 0; j < samplerConfig->samplerOptions->micNumSamples; j++)
     {
         _sample->audioBuffer[j] = 0;
     }
@@ -98,12 +126,12 @@ void Sampler::resetSample(SampleDataPoint *_sample)
 
 void Sampler::saveSamplesToFile()
 {
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
         Serial.println("Saving samples to file");
 
     jsonDoc.clear();
     JsonArray jsonSamples = jsonDoc["samples"].to<JsonArray>();
-    for (int i = 0; i < samplerOptions->sampleDataPointBufferSize; i++)
+    for (int i = 0; i < samplerConfig->samplerOptions->sampleDataPointBufferSize; i++)
     {
         if (sampleDataPoints[i].timestamp == 0)
         {
@@ -120,7 +148,7 @@ void Sampler::saveSamplesToFile()
         JsonArray frequenciesX = jsonSample["frequenciesX"].to<JsonArray>();
         JsonArray frequenciesY = jsonSample["frequenciesY"].to<JsonArray>();
         JsonArray frequenciesZ = jsonSample["frequenciesZ"].to<JsonArray>();
-        for (int j = 0; j < samplerOptions->accNumSamples; j++)
+        for (int j = 0; j < samplerConfig->samplerOptions->accNumSamples; j++)
         {
             frequenciesX.add(sampleDataPoints[i].accFrequenciesX[j]);
             frequenciesY.add(sampleDataPoints[i].accFequenciesY[j]);
@@ -128,7 +156,7 @@ void Sampler::saveSamplesToFile()
         }
     }
 
-    if (samplerOptions->logLevel >= LogLevel::Verbose)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
         serializeJsonPretty(jsonDoc, Serial);
 
     // while (1)
@@ -148,28 +176,28 @@ void Sampler::saveSamplesToFile()
     file.close();
     jsonDoc.clear();
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
         Serial.println("Samples saved to file");
 }
 
 void Sampler::sampleFrequencies()
 {
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling acc data...");
     }
-    for (int i = 0; i < samplerOptions->accNumSamples; i++)
+    for (int i = 0; i < samplerConfig->samplerOptions->accNumSamples; i++)
     {
         currentMicroseconds = micros();
         if (IMU.accelerationAvailable())
         {
             IMU.readAcceleration(accelerometer->accX, accelerometer->accY, accelerometer->accZ);
-            if (samplerOptions->logLevel >= LogLevel::Verbose)
+            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
                 Serial.println("Read acceleration data! >>> ");
         }
         else
         {
-            if (samplerOptions->logLevel >= LogLevel::Verbose)
+            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
                 Serial.println("Failed to read acceleration data! <<< ");
 
             accelerometer->accX = 0.0;
@@ -177,7 +205,7 @@ void Sampler::sampleFrequencies()
             accelerometer->accZ = 0.0;
         }
 
-        if (samplerOptions->logLevel >= LogLevel::Verbose)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
         {
             Serial.print("Acceleration read: ");
             Serial.print(accelerometer->accX);
@@ -202,7 +230,7 @@ void Sampler::sampleFrequencies()
 
     // Add the frequencies to `sample.frequencies` variables
     sampleDataPoint->timestamp = millis();
-    for (int i = 0; i < samplerOptions->accNumSamples; i++)
+    for (int i = 0; i < samplerConfig->samplerOptions->accNumSamples; i++)
     {
         sampleDataPoint->accFrequenciesX[i] = accelerometer->vRealX[i];
         sampleDataPoint->accFequenciesY[i] = accelerometer->vRealY[i];
@@ -214,16 +242,21 @@ void Sampler::sampleFrequencies()
         accelerometer->vRealZ[i] = 0.0;
     }
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Acc data sampled\n");
     }
 }
 
+void Sampler::checkTriggers()
+{
+    //@todo Implement this
+}
+
 void Sampler::sampleData()
 {
     currentMillis = millis();
-    isTimeForDataCollection = previousMillis == 0 || currentMillis - previousMillis >= samplerOptions->intervalInMillis;
+    isTimeForDataCollection = previousMillis == 0 || currentMillis - previousMillis >= samplerConfig->intervalMsTrigger;
     if (!isTimeForDataCollection)
         return;
 
@@ -242,11 +275,11 @@ void Sampler::sampleData()
     //     ;
 
     // Buffer should always have space for a new acc data point because it's reset when it's full, right below
-    for (int i = 0; i < samplerOptions->sampleDataPointBufferSize; i++)
+    for (int i = 0; i < samplerConfig->samplerOptions->sampleDataPointBufferSize; i++)
     {
         if (sampleDataPoints[i].timestamp == 0)
         {
-            if (samplerOptions->logLevel >= LogLevel::Info)
+            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             {
                 Serial.print("Adding sample at index: ");
                 Serial.println(i);
@@ -255,7 +288,7 @@ void Sampler::sampleData()
             copySample(&sampleDataPoints[i]);
             resetSample(sampleDataPoint);
 
-            if (samplerOptions->logLevel >= LogLevel::Info)
+            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             {
                 Serial.println("Sample added");
             }
@@ -264,38 +297,38 @@ void Sampler::sampleData()
     }
 
     // Log data and reset the buffer when it's full
-    if (sampleDataPoints[samplerOptions->sampleDataPointBufferSize - 1].timestamp != 0)
+    if (sampleDataPoints[samplerConfig->samplerOptions->sampleDataPointBufferSize - 1].timestamp != 0)
     {
-        if (samplerOptions->logLevel >= LogLevel::Info)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             Serial.println("\nBuffer full. Saving to file and resetting buffer");
 
-        if (samplerOptions->saveToSdCard)
+        if (samplerConfig->samplerOptions->saveToSdCard)
         {
             saveSamplesToFile();
-            if (samplerOptions->logLevel >= LogLevel::Info)
+            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
                 Serial.println("Saved to SD card\n");
         }
         else
         {
-            if (samplerOptions->logLevel >= LogLevel::Info)
+            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
                 Serial.println("Skipping and not saving to SD card\n");
         }
 
-        if (samplerOptions->logLevel >= LogLevel::Verbose)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
             Serial.println("Resetting buffer\n");
 
         // Reset each sample in the buffer data points
-        for (int i = 0; i < samplerOptions->sampleDataPointBufferSize; i++)
+        for (int i = 0; i < samplerConfig->samplerOptions->sampleDataPointBufferSize; i++)
         {
             resetSample(&sampleDataPoints[i]);
         }
 
-        if (samplerOptions->logLevel >= LogLevel::Verbose)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
             Serial.println("Buffer reset\n");
     }
     else
     {
-        if (samplerOptions->logLevel >= LogLevel::Info)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             Serial.println("Buffer not full yet\n");
     }
 }

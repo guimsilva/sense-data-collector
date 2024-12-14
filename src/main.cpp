@@ -7,6 +7,7 @@
 namespace
 {
   SamplerOptions *samplerOptions;
+  SamplerConfig *samplerConfig;
   Sampler *sampler;
 } // namespace
 
@@ -17,8 +18,9 @@ void setup()
     ;
   Serial.println("\nSerial started\n");
 
-  samplerOptions = new SamplerOptions(5000, 256, 0, 16000, 5, LogLevel::Info, false);
-  sampler = new Sampler(samplerOptions);
+  samplerOptions = new SamplerOptions(256, 0, 16000, 5, LogLevel::Info, false);
+  samplerConfig = new SamplerConfig(samplerOptions);
+  sampler = new Sampler(samplerConfig);
 
   Serial.println("Completed setup()\n");
 }

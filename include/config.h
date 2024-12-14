@@ -11,12 +11,29 @@
 
 #include <Arduino.h>
 #include <tuple>
+#include <algorithm>
 
-enum class LogLevel
+#include "options.h"
+
+enum class Triggers
 {
-    None,
-    Info,
-    Verbose,
+    Interval,
+    /**
+     * Uses accThreshold on acc X, Y and Z to trigger data collection
+     */
+    AccRaw,
+    /**
+     * Uses MovingStatus and MovingDirection to trigger data collection
+     */
+    AccMovement,
+    Microphone,
+};
+
+enum class DataSensor
+{
+    Accelerometer,
+    Microphone,
+    Barometer,
 };
 
 enum class MovingStatus
@@ -34,42 +51,62 @@ enum class MovingDirection
     Down
 };
 
-enum class SupportedSensor
-{
-    Accelerometer,
-    Microphone,
-    Barometer,
-};
-
-class Config
+class SamplerConfig
 {
 public:
-    SupportedSensor *supportedSensors;
     /**
-     * If array is empty, it means all sensors are supported.
-     * The sensors here mean that will be triggered when the movement status changes.
+     * Triggers that can initiate data collection
      */
-    std::tuple<MovingStatus, MovingDirection, std::array<SupportedSensor, 3>> *movementTriggers;
+    Triggers *triggers;
 
-    Config(SupportedSensor *supportedSensors, std::tuple<MovingStatus, MovingDirection, std::array<SupportedSensor, 3>> *_movementTriggers)
-        : supportedSensors(supportedSensors)
-    {
-        if (_movementTriggers == nullptr)
-        {
-            movementTriggers = new std::tuple<MovingStatus, MovingDirection, std::array<SupportedSensor, 3>>[7];
-            movementTriggers[0] = std::make_tuple(MovingStatus::Stopped, MovingDirection::None, std::array<SupportedSensor, 3>{});
-            movementTriggers[1] = std::make_tuple(MovingStatus::Accelerating, MovingDirection::Up, std::array<SupportedSensor, 3>{});
-            movementTriggers[2] = std::make_tuple(MovingStatus::Accelerating, MovingDirection::Down, std::array<SupportedSensor, 3>{});
-            movementTriggers[3] = std::make_tuple(MovingStatus::Steady, MovingDirection::Up, std::array<SupportedSensor, 3>{});
-            movementTriggers[4] = std::make_tuple(MovingStatus::Steady, MovingDirection::Down, std::array<SupportedSensor, 3>{});
-            movementTriggers[5] = std::make_tuple(MovingStatus::Stopping, MovingDirection::Up, std::array<SupportedSensor, 3>{});
-            movementTriggers[6] = std::make_tuple(MovingStatus::Stopping, MovingDirection::Down, std::array<SupportedSensor, 3>{});
-        }
-        else
-        {
-            movementTriggers = _movementTriggers;
-        }
-    }
+    /**
+     * Supported sensors for data collection
+     */
+    DataSensor *dataSensors;
+
+    /**
+     * Interval at which allow data collection (milliseconds)
+     */
+    unsigned long intervalMsTrigger; // @TODO rename to intervalMsTrigger <<<<<
+
+    /**
+     * Movements that can trigger data collection
+     */
+    std::tuple<MovingStatus, MovingDirection> *movementTriggers;
+
+    /**
+     * Raw acc threshold values to trigger data collection. One for each axis (X, Y, Z)
+     */
+    int16_t *accThresholdTrigger;
+
+    /**
+     * Min audio buffer size to trigger data collection.
+     * The first flag that will be checked is the hasAudio flag, then it will check the audioBufferSizeTrigger.
+     */
+    int16_t audioBufferSizeTrigger;
+
+    /**
+     * Additional parameters, complimenting the SamplerConfig.
+     * More granular control over the sampler.
+     */
+    SamplerOptions *samplerOptions;
+
+    /**
+     * Basic configuration for the sampler triggers and sensors to be used.
+     * Defaults are:
+     * - Triggers: Interval
+     * - Data sensors: Accelerometer, Microphone, Barometer
+     * - Interval: 5000 milliseconds
+     * The rest will be ignored if their respective triggers are not set.
+     */
+    SamplerConfig(
+        SamplerOptions *_samplerOptions,
+        Triggers *_triggers = nullptr,
+        DataSensor *_dataSensors = nullptr,
+        unsigned long _intervalInMillis = 0,
+        std::tuple<MovingStatus, MovingDirection> *_movementTriggers = nullptr,
+        int16_t *_accThreshold = nullptr,
+        int16_t _audioBufferSizeTrigger = 0);
 };
 
 #endif // CONFIG_H

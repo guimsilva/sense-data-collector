@@ -2,12 +2,19 @@
 #define OPTIONS_H
 
 #include <Arduino.h>
-#include "config.h"
+
+enum class LogLevel
+{
+    None,
+    Info,
+    Verbose,
+};
 
 struct SamplerOptions
 {
     /**
-     * @param _intervalInMillis Interval at which allow data collection (milliseconds). Default is 2000
+     * Additional parameters, complimenting the SamplerConfig.
+     * Only attributes related to their respective sensors will be used.
      * @param _accNumSamples Number of samples to be collected - must be a power of 2. Default is 256
      * @param _accSamplingFrequency Max acc sampling frequency in Hz. If left default 0, it will get the max sampling frequency from the IMU
      * @param _micSamplingRate Audio sampling frequency in Hz. Default is 16000
@@ -16,15 +23,13 @@ struct SamplerOptions
      * @param _saveToSdCard Whether to save the data to the SD card. Default is true
      */
     SamplerOptions(
-        unsigned long _intervalInMillis = 2000,
         int16_t _accNumSamples = 256,
         int16_t _accSamplingFrequency = 0,
         int16_t _micSamplingRate = 16000,
         int16_t _sampleDataPointBufferSize = 10,
         LogLevel _logLevel = LogLevel::Info,
         bool _saveToSdCard = true)
-        : intervalInMillis(_intervalInMillis),
-          accNumSamples(_accNumSamples),
+        : accNumSamples(_accNumSamples),
           accSamplingFrequency(_accSamplingFrequency),
           micSamplingRate(_micSamplingRate),
           sampleDataPointBufferSize(_sampleDataPointBufferSize),
@@ -33,9 +38,6 @@ struct SamplerOptions
     {
         accSamplingLengthMs = 0; // Will be reset in the acc constructor
     }
-
-    // Interval at which allow data collection (milliseconds)
-    const unsigned long intervalInMillis;
 
     int16_t accNumSamples;        // Must be a power of 2
     int16_t accSamplingFrequency; // Hz. Determines maximum frequency
