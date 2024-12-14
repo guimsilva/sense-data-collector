@@ -21,7 +21,7 @@ Accelerometer::Accelerometer(SamplerConfig *_samplerConfig)
     // Start IMU
     if (!IMU.begin())
     {
-        Serial.println("Failed to initialized IMU!");
+        Serial.println("Failed to initialize IMU!");
         while (1)
             ;
     }
@@ -49,10 +49,6 @@ Accelerometer::Accelerometer(SamplerConfig *_samplerConfig)
 
     if (_samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
-        Serial.println("Accelerometer initialized with options (AccNumSamples, AccSamplingFrequency, AccSamplingLengthMs):");
-        Serial.println(samplerConfig->accOptions->accNumSamples);
-        Serial.println(samplerConfig->accOptions->accSamplingFrequency);
-        Serial.println(samplerConfig->accOptions->accSamplingLengthMs);
-        Serial.println();
+        Serial.println("Accelerometer initialized\n");
     }
 }

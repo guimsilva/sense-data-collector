@@ -2,7 +2,6 @@
 #include <Arduino_LPS22HB.h>
 
 #include "sampler.h"
-#include "config.h"
 
 namespace
 {
@@ -20,7 +19,7 @@ void setup()
     ;
   Serial.println("\nSerial started\n");
 
-  samplerOptions = new SamplerOptions();
+  samplerOptions = new SamplerOptions(false, LogLevel::Info, 3);
   accOptions = new AccOptions();
   micOptions = new MicOptions();
   samplerConfig = new SamplerConfig(samplerOptions, accOptions, micOptions);

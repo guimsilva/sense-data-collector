@@ -17,6 +17,7 @@ struct SampleDataPoint
         pressureKpa = 0.0;
         altitudeMeters = 0.0;
         movingStatus = MovingStatus::Stopped;
+        movingDirection = MovingDirection::None;
         movingSpeed = 0;
         timestamp = 0;
 
@@ -42,6 +43,7 @@ struct SampleDataPoint
     int16_t *audioBuffer;
 
     MovingStatus movingStatus;
+    MovingDirection movingDirection;
     int8_t movingSpeed;
 
     unsigned long timestamp;

@@ -10,29 +10,29 @@ namespace microphone
     // Whether new data is available
     volatile bool hasNewData = false;
     // Log level
-    LogLevel logLevel = LogLevel::Info;
+    // LogLevel logLevel = LogLevel::Info;
 
     void onPDMdataCallback()
     {
-        if (logLevel >= LogLevel::Verbose)
-        {
-            Serial.print("PDM data callback. Bytes available: ");
-        }
+        // if (logLevel >= LogLevel::Verbose)
+        // {
+        //     Serial.print("PDM data callback. Bytes available: ");
+        // }
 
         int bytesAvailable = PDM.available();
         PDM.read(localTempAudioBuffer, bytesAvailable);
 
-        if (logLevel >= LogLevel::Verbose)
-        {
-            Serial.println(bytesAvailable);
-        }
+        // if (logLevel >= LogLevel::Verbose)
+        // {
+        //     Serial.println(bytesAvailable);
+        // }
 
         hasNewData = true;
 
-        if (logLevel >= LogLevel::Verbose)
-        {
-            Serial.println("PDM data read");
-        }
+        // if (logLevel >= LogLevel::Verbose)
+        // {
+        //     Serial.println("PDM data read");
+        // }
     }
 } // namespace
 
@@ -57,17 +57,11 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_sample
 
     samplerConfig->micOptions->micNumSamples = round(static_cast<double>(samplerConfig->micOptions->micSamplingRate * samplerConfig->accOptions->accSamplingLengthMs) / 1000);
 
-    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
-    {
-        Serial.print("Total audio samples: ");
-        Serial.println(samplerConfig->micOptions->micNumSamples);
-    }
-
     // Re-initialize the sampleDataPoint audio buffer here because micNumSamples is now known
     sampleDataPoint->audioBuffer = new int16_t[samplerConfig->micOptions->micNumSamples];
     // Set the static buffer to the local buffer so the static callback can access it
     microphone::localTempAudioBuffer = tempAudioBuffer;
-    microphone::logLevel = samplerConfig->samplerOptions->logLevel;
+    // microphone::logLevel = samplerConfig->samplerOptions->logLevel;
 
     PDM.onReceive(microphone::onPDMdataCallback);
 

@@ -50,7 +50,6 @@ enum class LogLevel
 struct AccOptions
 {
     /**
-     * Only attributes related to their respective sensors will be used.
      * @param _accNumSamples Number of samples to be collected - must be a power of 2. Default is 256
      * @param _accSamplingFrequency Max acc sampling frequency in Hz. If left default 0 then it will get the max sampling frequency from the IMU
      */
@@ -102,31 +101,41 @@ struct SamplerOptions
      * @param _saveToSdCard Whether to save the data to the SD card. Default is true
      */
     SamplerOptions(
+        bool _saveToSdCard = true,
+        LogLevel _logLevel = LogLevel::Info,
+        int16_t _sampleDataPointBufferSize = 10,
+        unsigned long _intervalInMillis = 0,
         Triggers *_triggers = nullptr,
         DataSensor *_dataSensors = nullptr,
         std::tuple<MovingStatus, MovingDirection> *_movementTriggers = nullptr,
         int16_t *_accThresholdTrigger = nullptr,
-        int16_t _audioBufferSizeTrigger = 0,
-        unsigned long _intervalInMillis = 0,
-        int16_t _sampleDataPointBufferSize = 10,
-        LogLevel _logLevel = LogLevel::Info,
-        bool _saveToSdCard = true)
-        : sampleDataPointBufferSize(_sampleDataPointBufferSize),
+        int16_t _audioBufferSizeTrigger = 0)
+        : saveToSdCard(_saveToSdCard),
           logLevel(_logLevel),
-          saveToSdCard(_saveToSdCard)
+          sampleDataPointBufferSize(_sampleDataPointBufferSize)
+
     {
         if (_triggers == nullptr)
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting triggers to Interval only");
+
             triggers = new Triggers[1];
             triggers[0] = Triggers::Interval;
         }
         else
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting triggers to user defined");
+
             triggers = _triggers;
         }
 
         if (_dataSensors == nullptr)
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting dataSensors to \"all sensors\"");
+
             dataSensors = new DataSensor[3];
             dataSensors[0] = DataSensor::Accelerometer;
             dataSensors[1] = DataSensor::Microphone;
@@ -134,20 +143,34 @@ struct SamplerOptions
         }
         else
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting dataSensors to user defined");
+
             dataSensors = _dataSensors;
         }
 
         if (_intervalInMillis == 0 && std::find(triggers, triggers + 1, Triggers::Interval) != triggers + 1)
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting intervalMsTrigger to 5000");
+
             intervalMsTrigger = 5000;
         }
         else if (_intervalInMillis != 0)
         {
+            if (logLevel >= LogLevel::Info)
+            {
+                Serial.print("Setting intervalMsTrigger to ");
+                Serial.println(_intervalInMillis);
+            }
             intervalMsTrigger = _intervalInMillis;
         }
 
         if (_movementTriggers == nullptr && std::find(triggers, triggers + 1, Triggers::AccMovement) != triggers + 1)
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting movementTriggers to default");
+
             movementTriggers = new std::tuple<MovingStatus, MovingDirection>[7];
             movementTriggers[0] = std::make_tuple(MovingStatus::Stopped, MovingDirection::None);
             movementTriggers[1] = std::make_tuple(MovingStatus::Accelerating, MovingDirection::Up);
@@ -159,11 +182,17 @@ struct SamplerOptions
         }
         else
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting movementTriggers to user defined");
+
             movementTriggers = _movementTriggers;
         }
 
         if (_accThresholdTrigger == nullptr && std::find(triggers, triggers + 1, Triggers::AccRaw) != triggers + 1)
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting accThresholdTrigger to default");
+
             accThresholdTrigger = new int16_t[3];
             accThresholdTrigger[0] = 100;
             accThresholdTrigger[1] = 100;
@@ -171,15 +200,26 @@ struct SamplerOptions
         }
         else
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting accThresholdTrigger to user defined");
+
             accThresholdTrigger = _accThresholdTrigger;
         }
 
         if (_audioBufferSizeTrigger == 0 && std::find(triggers, triggers + 1, Triggers::Microphone) != triggers + 1)
         {
+            if (logLevel >= LogLevel::Info)
+                Serial.println("Setting audioBufferSizeTrigger to 1000");
+
             audioBufferSizeTrigger = 1000;
         }
         else
         {
+            if (logLevel >= LogLevel::Info)
+            {
+                Serial.print("Setting audioBufferSizeTrigger to ");
+                Serial.println(_audioBufferSizeTrigger);
+            }
             audioBufferSizeTrigger = _audioBufferSizeTrigger;
         }
     }

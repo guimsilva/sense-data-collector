@@ -62,19 +62,16 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
             }
         }
         Serial.println();
-        Serial.println("Interval in millis:");
-        Serial.println(samplerConfig->samplerOptions->intervalMsTrigger);
-        Serial.println("Movement triggers:");
-        Serial.println((int)std::get<0>(samplerConfig->samplerOptions->movementTriggers[0]) + " - " + (int)std::get<1>(samplerConfig->samplerOptions->movementTriggers[1]));
-        Serial.println("Acc threshold:");
-        Serial.print((int)samplerConfig->samplerOptions->accThresholdTrigger[0] + " ");
-        Serial.print((int)samplerConfig->samplerOptions->accThresholdTrigger[1] + " ");
-        Serial.println((int)samplerConfig->samplerOptions->accThresholdTrigger[2]);
-        Serial.println("and options (AccNumSamples, AccSamplingFrequency, AccDataPointBufferSize, SaveToSdCard):");
-        Serial.println(samplerConfig->accOptions->accNumSamples);
-        Serial.println(samplerConfig->accOptions->accSamplingFrequency);
+        Serial.println("Sampler Options (SampleDataPointBufferSize, SaveToSdCard):");
         Serial.println(samplerConfig->samplerOptions->sampleDataPointBufferSize);
         Serial.println(samplerConfig->samplerOptions->saveToSdCard);
+        Serial.println("Acc Options (AccNumSamples, AccSamplingFrequency, AccSamplingLengthMs):");
+        Serial.println(samplerConfig->accOptions->accNumSamples);
+        Serial.println(samplerConfig->accOptions->accSamplingFrequency);
+        Serial.println(samplerConfig->accOptions->accSamplingLengthMs);
+        Serial.println("Mic Options (MicSamplingRate, MicNumSamples):");
+        Serial.println(samplerConfig->micOptions->micSamplingRate);
+        Serial.println(samplerConfig->micOptions->micNumSamples);
         Serial.println();
     }
 }
@@ -86,6 +83,7 @@ void Sampler::copySample(SampleDataPoint *newSample)
     newSample->pressureKpa = sampleDataPoint->pressureKpa;
     newSample->altitudeMeters = sampleDataPoint->altitudeMeters;
     newSample->movingStatus = sampleDataPoint->movingStatus;
+    newSample->movingDirection = sampleDataPoint->movingDirection;
     newSample->movingSpeed = sampleDataPoint->movingSpeed;
 
     for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
@@ -142,6 +140,7 @@ void Sampler::saveSamplesToFile()
         jsonSample["pressureKpa"] = sampleDataPoints[i].pressureKpa;
         jsonSample["altitudeM"] = sampleDataPoints[i].altitudeMeters;
         jsonSample["movingStatus"] = (int)sampleDataPoints[i].movingStatus;
+        jsonSample["movingDirection"] = (int)sampleDataPoints[i].movingDirection;
         jsonSample["movingSpeed"] = sampleDataPoints[i].movingSpeed;
 
         JsonArray frequenciesX = jsonSample["frequenciesX"].to<JsonArray>();
@@ -153,10 +152,16 @@ void Sampler::saveSamplesToFile()
             frequenciesY.add(sampleDataPoints[i].accFequenciesY[j]);
             frequenciesZ.add(sampleDataPoints[i].accFrequenciesZ[j]);
         }
+
+        JsonArray audioBuffer = jsonSample["audioBuffer"].to<JsonArray>();
+        for (int j = 0; j < samplerConfig->micOptions->micNumSamples; j++)
+        {
+            audioBuffer.add(sampleDataPoints[i].audioBuffer[j]);
+        }
     }
 
-    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
-        serializeJsonPretty(jsonDoc, Serial);
+    // if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+    //     serializeJsonPretty(jsonDoc, Serial);
 
     // while (1)
     //     ;
