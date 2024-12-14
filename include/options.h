@@ -76,12 +76,15 @@ struct MicOptions
      * @param _micSamplingRate Audio sampling frequency in Hz. Default is 16000
      */
     MicOptions(
-        int16_t _micSamplingRate = 16000)
-        : micSamplingRate(_micSamplingRate)
+        int16_t _micSamplingRate = 16000,
+        int16_t _micSamplingLengthMs = 2000)
+        : micSamplingRate(_micSamplingRate),
+          micSamplingLengthMs(_micSamplingLengthMs)
     {
     }
 
-    int16_t micSamplingRate; // Hz. Determines audio sampling frequency
+    int16_t micSamplingRate;     // Hz. Determines audio sampling frequency
+    int16_t micSamplingLengthMs; // Used when Acc sampling is not set
 
     // Internal i.e. not set by user
     int micNumSamples; // Calculated in the mic constructor e.g. micSamplingRate * accSamplingLengthMs / 1000
@@ -251,13 +254,26 @@ struct SamplerOptions
 
     /**
      * Min audio buffer size to trigger data collection.
-     * The first flag that will be checked is the hasAudio flag, then it will check the audioBufferSizeTrigger.
+     * The first flag that will be checked is the mic hasNewData flag, then it will check this trigger with the tempAudioBuffer size.
+     *
+     * @todo Add more mic trigger conditions, such as min decibels
      */
     int16_t audioBufferSizeTrigger;
 
     int16_t sampleDataPointBufferSize; // Number of whole sample data points to be collected before saving to file
     bool saveToSdCard;
     LogLevel logLevel;
+
+    // Internal - convert triggers into boolean values for faster checking
+    bool hasIntervalTrigger;
+    bool hasAccRawTrigger;
+    bool hasAccMovementTrigger;
+    bool hasMicTrigger;
+
+    // Convert sensor data into boolean values for faster checking
+    bool hasAccSensor;
+    bool hasMicSensor;
+    bool hasBarSensor;
 };
 
 #endif // OPTIONS_H

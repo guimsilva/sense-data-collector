@@ -34,6 +34,50 @@ public:
           accOptions(_accOptions),
           micOptions(_micOptions)
     {
+        for (int i = 0; i < sizeof(samplerOptions->triggers) / sizeof(samplerOptions->triggers[0]); i++)
+        {
+            if (samplerOptions->triggers[i] == Triggers::Interval)
+            {
+                samplerOptions->hasIntervalTrigger = true;
+            }
+            else if (samplerOptions->triggers[i] == Triggers::AccMovement)
+            {
+                samplerOptions->hasAccMovementTrigger = true;
+            }
+            else if (samplerOptions->triggers[i] == Triggers::AccRaw)
+            {
+                samplerOptions->hasAccRawTrigger = true;
+            }
+            else if (samplerOptions->triggers[i] == Triggers::Microphone)
+            {
+                samplerOptions->hasMicTrigger = true;
+            }
+        }
+
+        // Check if triggers has Interval and other triggers at the same time, and if so, show a warning and stop
+        if (samplerOptions->hasIntervalTrigger &&
+            (samplerOptions->hasAccMovementTrigger || samplerOptions->hasAccRawTrigger || samplerOptions->hasMicTrigger))
+        {
+            Serial.println("Cannot have Interval and other triggers at the same time");
+            while (1)
+                ;
+        }
+
+        for (int i = 0; i < static_cast<int>(sizeof(samplerOptions->dataSensors) / sizeof(samplerOptions->dataSensors[0])); i++)
+        {
+            if (samplerOptions->dataSensors[i] == DataSensor::Accelerometer)
+            {
+                samplerOptions->hasAccSensor = true;
+            }
+            else if (samplerOptions->dataSensors[i] == DataSensor::Microphone)
+            {
+                samplerOptions->hasMicSensor = true;
+            }
+            else if (samplerOptions->dataSensors[i] == DataSensor::Barometer)
+            {
+                samplerOptions->hasBarSensor = true;
+            }
+        }
     }
 };
 

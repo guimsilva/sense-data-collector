@@ -28,6 +28,8 @@ public:
     void bufferCallback();
 
     void stopAudioSampling();
+
+    bool isTriggered();
 };
 
 #endif // MICROPHONE_H

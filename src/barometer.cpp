@@ -77,6 +77,9 @@ void Barometer::getMovingStatus()
 
 void Barometer::sampleBarometer()
 {
+    if (!samplerConfig->samplerOptions->hasBarSensor)
+        return;
+
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling pressure data...");

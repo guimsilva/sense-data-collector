@@ -31,7 +31,7 @@ private:
     // @deprecated once it's changed to be based on events
     unsigned long previousMillis; // Store the last time the data collection event occurred
     unsigned long currentMillis;
-    bool isTimeForDataCollection;
+    bool startDataCollection;
 
     // Used to measure the time it takes to sample the data for frequency analysis
     unsigned long currentMicroseconds;
@@ -51,14 +51,19 @@ private:
     // Save the samples to file
     void saveSamplesToFile();
 
+    // Sample the data when the triggers are met
+    void sampleData();
+
 public:
     /**
      * @param _options The sampler options
      */
     Sampler(SamplerConfig *_samplerConfig);
 
+    /**
+     * Check the triggers to start data collection
+     */
     void checkTriggers();
-    void sampleData();
 };
 
 #endif // SAMPLER_H

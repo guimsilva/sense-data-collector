@@ -30,5 +30,5 @@ void setup()
 
 void loop()
 {
-  sampler->sampleData();
+  sampler->checkTriggers();
 }

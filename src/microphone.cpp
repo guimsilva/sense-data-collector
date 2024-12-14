@@ -9,30 +9,12 @@ namespace microphone
     int16_t *localTempAudioBuffer;
     // Whether new data is available
     volatile bool hasNewData = false;
-    // Log level
-    // LogLevel logLevel = LogLevel::Info;
 
     void onPDMdataCallback()
     {
-        // if (logLevel >= LogLevel::Verbose)
-        // {
-        //     Serial.print("PDM data callback. Bytes available: ");
-        // }
-
         int bytesAvailable = PDM.available();
         PDM.read(localTempAudioBuffer, bytesAvailable);
-
-        // if (logLevel >= LogLevel::Verbose)
-        // {
-        //     Serial.println(bytesAvailable);
-        // }
-
         hasNewData = true;
-
-        // if (logLevel >= LogLevel::Verbose)
-        // {
-        //     Serial.println("PDM data read");
-        // }
     }
 } // namespace
 
@@ -61,7 +43,6 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_sample
     sampleDataPoint->audioBuffer = new int16_t[samplerConfig->micOptions->micNumSamples];
     // Set the static buffer to the local buffer so the static callback can access it
     microphone::localTempAudioBuffer = tempAudioBuffer;
-    // microphone::logLevel = samplerConfig->samplerOptions->logLevel;
 
     PDM.onReceive(microphone::onPDMdataCallback);
 
@@ -74,16 +55,34 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_sample
 
 void Microphone::startAudioSampling()
 {
+    if (!samplerConfig->samplerOptions->hasMicTrigger)
+        return;
+
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling audio from microphone...");
     }
 
-    if (!PDM.begin(1, samplerConfig->micOptions->micSamplingRate))
+    if (samplerConfig->samplerOptions->hasIntervalTrigger)
     {
-        Serial.println("Failed to start PDM!");
-        while (1)
-            ;
+        if (!PDM.begin(1, samplerConfig->micOptions->micSamplingRate))
+        {
+            Serial.println("Failed to start PDM!");
+            while (1)
+                ;
+        }
+    }
+    else
+    {
+        sampleIndex = 0;
+        for (int i = 0; i < samplerConfig->micOptions->micNumSamples; i++)
+        {
+            sampleDataPoint->audioBuffer[i] = 0;
+        }
+        for (int i = 0; i < tempBufferSize; i++)
+        {
+            tempAudioBuffer[i] = 0;
+        }
     }
 }
 
@@ -91,7 +90,11 @@ void Microphone::stopAudioSampling()
 {
     // Call bufferCallback one last time to get the remaining samples before stopping PDM
     bufferCallback();
-    PDM.end();
+
+    if (!samplerConfig->samplerOptions->hasMicTrigger)
+    {
+        PDM.end();
+    }
 
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
@@ -99,14 +102,31 @@ void Microphone::stopAudioSampling()
     }
 }
 
+/**
+ * Used for both Interval and Microphone triggers.
+ */
 void Microphone::bufferCallback()
 {
     if (!microphone::hasNewData)
         return;
 
     microphone::hasNewData = false;
+
     for (int i = 0; i < tempBufferSize && sampleIndex < samplerConfig->micOptions->micNumSamples; i++)
     {
         sampleDataPoint->audioBuffer[sampleIndex++] = tempAudioBuffer[i];
     }
+}
+
+/**
+ * Used only with the Microphone trigger.
+ * Microphone has a particular way to check for triggers.
+ * Check if the microphone has new data and if the audioBufferSizeTrigger is equal or greater than tempAudioBuffer
+ *
+ * @todo Add more mic trigger conditions, such as min decibels
+ */
+bool Microphone::isTriggered()
+{
+    return microphone::hasNewData &&
+           samplerConfig->samplerOptions->audioBufferSizeTrigger >= static_cast<unsigned int>(sizeof(tempAudioBuffer) / sizeof(tempAudioBuffer[0]));
 }
