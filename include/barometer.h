@@ -3,14 +3,13 @@
 
 #include <Arduino.h>
 
-#include "options.h"
 #include "config.h"
 #include "sample.h"
 
 class Barometer
 {
 private:
-    SamplerOptions *sampleOptions;
+    SamplerConfig *samplerConfig;
     // The sample data point reference
     SampleDataPoint *sampleDataPoint;
 
@@ -31,7 +30,7 @@ private:
     void getMovingStatus();
 
 public:
-    Barometer(SampleDataPoint *_sampleDataPoint, SamplerOptions *_samplerOptions);
+    Barometer(SampleDataPoint *_sampleDataPoint, SamplerConfig *_samplerConfig);
 
     void sampleBarometer();
 };

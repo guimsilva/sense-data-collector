@@ -5,11 +5,10 @@
 
 #include "Arduino_BMI270_BMM150.h"
 #include "sampler.h"
-#include "config.h"
 
 Sampler::Sampler(SamplerConfig *_samplerConfig)
     : samplerConfig(_samplerConfig),
-      sampleDataPoint(new SampleDataPoint(_samplerConfig->samplerOptions->accNumSamples)),
+      sampleDataPoint(new SampleDataPoint(_samplerConfig->accOptions->accNumSamples)),
       sampleDataPoints(new SampleDataPoint[_samplerConfig->samplerOptions->sampleDataPointBufferSize])
 {
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
@@ -32,9 +31,9 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
             Serial.println("Skipping SD card");
     }
 
-    accelerometer = new Accelerometer(samplerConfig->samplerOptions);
-    barometer = new Barometer(sampleDataPoint, samplerConfig->samplerOptions);
-    microphone = new Microphone(sampleDataPoint, samplerConfig->samplerOptions);
+    accelerometer = new Accelerometer(samplerConfig);
+    barometer = new Barometer(sampleDataPoint, samplerConfig);
+    microphone = new Microphone(sampleDataPoint, samplerConfig);
 
     previousMillis = 0;
     currentMillis = 0;
@@ -44,36 +43,36 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
     {
         Serial.println("Sampler initialized with config..:");
         Serial.println("Triggers:");
-        for (int i = 0; i < sizeof(samplerConfig->triggers) / sizeof(samplerConfig->triggers[0]); i++)
+        for (int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
         {
-            Serial.print((int)samplerConfig->triggers[i]);
-            if (i < sizeof(samplerConfig->triggers) / sizeof(samplerConfig->triggers[0]) - 1)
+            Serial.print((int)samplerConfig->samplerOptions->triggers[i]);
+            if (i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]) - 1)
             {
                 Serial.print(", ");
             }
         }
         Serial.println();
         Serial.println("Data sensors:");
-        for (int i = 0; i < sizeof(samplerConfig->dataSensors) / sizeof(samplerConfig->dataSensors[0]); i++)
+        for (int i = 0; i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]); i++)
         {
-            Serial.print((int)samplerConfig->dataSensors[i]);
-            if (i < sizeof(samplerConfig->dataSensors) / sizeof(samplerConfig->dataSensors[0]) - 1)
+            Serial.print((int)samplerConfig->samplerOptions->dataSensors[i]);
+            if (i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]) - 1)
             {
                 Serial.print(", ");
             }
         }
         Serial.println();
         Serial.println("Interval in millis:");
-        Serial.println(samplerConfig->intervalMsTrigger);
+        Serial.println(samplerConfig->samplerOptions->intervalMsTrigger);
         Serial.println("Movement triggers:");
-        Serial.println((int)std::get<0>(samplerConfig->movementTriggers[0]) + " - " + (int)std::get<1>(samplerConfig->movementTriggers[1]));
+        Serial.println((int)std::get<0>(samplerConfig->samplerOptions->movementTriggers[0]) + " - " + (int)std::get<1>(samplerConfig->samplerOptions->movementTriggers[1]));
         Serial.println("Acc threshold:");
-        Serial.print((int)samplerConfig->accThresholdTrigger[0] + " ");
-        Serial.print((int)samplerConfig->accThresholdTrigger[1] + " ");
-        Serial.println((int)samplerConfig->accThresholdTrigger[2]);
+        Serial.print((int)samplerConfig->samplerOptions->accThresholdTrigger[0] + " ");
+        Serial.print((int)samplerConfig->samplerOptions->accThresholdTrigger[1] + " ");
+        Serial.println((int)samplerConfig->samplerOptions->accThresholdTrigger[2]);
         Serial.println("and options (AccNumSamples, AccSamplingFrequency, AccDataPointBufferSize, SaveToSdCard):");
-        Serial.println(samplerConfig->samplerOptions->accNumSamples);
-        Serial.println(samplerConfig->samplerOptions->accSamplingFrequency);
+        Serial.println(samplerConfig->accOptions->accNumSamples);
+        Serial.println(samplerConfig->accOptions->accSamplingFrequency);
         Serial.println(samplerConfig->samplerOptions->sampleDataPointBufferSize);
         Serial.println(samplerConfig->samplerOptions->saveToSdCard);
         Serial.println();
@@ -89,7 +88,7 @@ void Sampler::copySample(SampleDataPoint *newSample)
     newSample->movingStatus = sampleDataPoint->movingStatus;
     newSample->movingSpeed = sampleDataPoint->movingSpeed;
 
-    for (int j = 0; j < samplerConfig->samplerOptions->accNumSamples; j++)
+    for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
     {
         newSample->accFrequenciesX[j] = sampleDataPoint->accFrequenciesX[j];
         newSample->accFequenciesY[j] = sampleDataPoint->accFequenciesY[j];
@@ -111,14 +110,14 @@ void Sampler::resetSample(SampleDataPoint *_sample)
     _sample->movingStatus = MovingStatus::Stopped;
     _sample->movingSpeed = 0;
 
-    for (int j = 0; j < samplerConfig->samplerOptions->accNumSamples; j++)
+    for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
     {
         _sample->accFrequenciesX[j] = 0.0;
         _sample->accFequenciesY[j] = 0.0;
         _sample->accFrequenciesZ[j] = 0.0;
     }
 
-    for (int j = 0; j < samplerConfig->samplerOptions->micNumSamples; j++)
+    for (int j = 0; j < samplerConfig->micOptions->micNumSamples; j++)
     {
         _sample->audioBuffer[j] = 0;
     }
@@ -148,7 +147,7 @@ void Sampler::saveSamplesToFile()
         JsonArray frequenciesX = jsonSample["frequenciesX"].to<JsonArray>();
         JsonArray frequenciesY = jsonSample["frequenciesY"].to<JsonArray>();
         JsonArray frequenciesZ = jsonSample["frequenciesZ"].to<JsonArray>();
-        for (int j = 0; j < samplerConfig->samplerOptions->accNumSamples; j++)
+        for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
         {
             frequenciesX.add(sampleDataPoints[i].accFrequenciesX[j]);
             frequenciesY.add(sampleDataPoints[i].accFequenciesY[j]);
@@ -186,7 +185,7 @@ void Sampler::sampleFrequencies()
     {
         Serial.println("Sampling acc data...");
     }
-    for (int i = 0; i < samplerConfig->samplerOptions->accNumSamples; i++)
+    for (int i = 0; i < samplerConfig->accOptions->accNumSamples; i++)
     {
         currentMicroseconds = micros();
         if (IMU.accelerationAvailable())
@@ -230,7 +229,7 @@ void Sampler::sampleFrequencies()
 
     // Add the frequencies to `sample.frequencies` variables
     sampleDataPoint->timestamp = millis();
-    for (int i = 0; i < samplerConfig->samplerOptions->accNumSamples; i++)
+    for (int i = 0; i < samplerConfig->accOptions->accNumSamples; i++)
     {
         sampleDataPoint->accFrequenciesX[i] = accelerometer->vRealX[i];
         sampleDataPoint->accFequenciesY[i] = accelerometer->vRealY[i];
@@ -256,7 +255,7 @@ void Sampler::checkTriggers()
 void Sampler::sampleData()
 {
     currentMillis = millis();
-    isTimeForDataCollection = previousMillis == 0 || currentMillis - previousMillis >= samplerConfig->intervalMsTrigger;
+    isTimeForDataCollection = previousMillis == 0 || currentMillis - previousMillis >= samplerConfig->samplerOptions->intervalMsTrigger;
     if (!isTimeForDataCollection)
         return;
 

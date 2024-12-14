@@ -1,15 +1,13 @@
 #include <Arduino.h>
 #include <Arduino_LPS22HB.h>
 
-#include "options.h"
-#include "config.h"
 #include "barometer.h"
 
-Barometer::Barometer(SampleDataPoint *_sampleDataPoint, SamplerOptions *_samplerOptions)
-    : sampleOptions(_samplerOptions),
-      sampleDataPoint(_sampleDataPoint)
+Barometer::Barometer(SampleDataPoint *_sampleDataPoint, SamplerConfig *_samplerConfig)
+    : sampleDataPoint(_sampleDataPoint),
+      samplerConfig(_samplerConfig)
 {
-    if (sampleOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Initializing barometer");
     }
@@ -22,7 +20,7 @@ Barometer::Barometer(SampleDataPoint *_sampleDataPoint, SamplerOptions *_sampler
             ;
     }
 
-    if (sampleOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Barometer initialized\n");
     }
@@ -67,7 +65,7 @@ void Barometer::getMovingStatus()
     // This is probably not right
     movingStatus = isMoving ? (movingSpeed > 0 ? MovingStatus::Steady : MovingStatus::Stopped) : MovingStatus::Stopped;
 
-    if (sampleOptions->logLevel >= LogLevel::Verbose)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
     {
         Serial.print("Moving status: ");
         Serial.println(isMoving ? "Moving" : "Stopped");
@@ -79,7 +77,7 @@ void Barometer::getMovingStatus()
 
 void Barometer::sampleBarometer()
 {
-    if (sampleOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling pressure data...");
     }
@@ -90,12 +88,12 @@ void Barometer::sampleBarometer()
     sampleDataPoint->movingStatus = movingStatus;
     sampleDataPoint->movingSpeed = movingSpeed;
 
-    if (sampleOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Pressure data sampled\n");
     }
 
-    if (sampleOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling temperature data...");
     }
@@ -103,7 +101,7 @@ void Barometer::sampleBarometer()
     getTemperature();
     sampleDataPoint->temperatureC = temperatureC;
 
-    if (sampleOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Temperature data sampled\n");
     }

@@ -5,7 +5,6 @@
 #include <ArduinoJson.h>
 
 #include "config.h"
-#include "options.h"
 #include "sample.h"
 #include "accelerometer.h"
 #include "barometer.h"
@@ -16,7 +15,6 @@ class Sampler
 private:
     // The sampler configuration
     SamplerConfig *samplerConfig;
-
     // The sample data point reference
     SampleDataPoint *sampleDataPoint;
     // The sample data point buffer

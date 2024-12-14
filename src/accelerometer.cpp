@@ -1,16 +1,15 @@
 #include <Arduino.h>
 
-#include "options.h"
 #include "accelerometer.h"
 #include "Arduino_BMI270_BMM150.h"
 
-Accelerometer::Accelerometer(SamplerOptions *_samplerOptions)
-    : samplerOptions(_samplerOptions),
-      vRealX(new double[_samplerOptions->accNumSamples]),
-      vRealY(new double[_samplerOptions->accNumSamples]),
-      vRealZ(new double[_samplerOptions->accNumSamples])
+Accelerometer::Accelerometer(SamplerConfig *_samplerConfig)
+    : samplerConfig(_samplerConfig),
+      vRealX(new double[_samplerConfig->accOptions->accNumSamples]),
+      vRealY(new double[_samplerConfig->accOptions->accNumSamples]),
+      vRealZ(new double[_samplerConfig->accOptions->accNumSamples])
 {
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Initializing accelerometer");
     }
@@ -28,32 +27,32 @@ Accelerometer::Accelerometer(SamplerOptions *_samplerOptions)
     }
     IMU.setContinuousMode();
 
-    if (samplerOptions->accSamplingFrequency == 0)
+    if (samplerConfig->accOptions->accSamplingFrequency == 0)
     {
-        samplerOptions->accSamplingFrequency = IMU.accelerationSampleRate();
+        samplerConfig->accOptions->accSamplingFrequency = IMU.accelerationSampleRate();
     }
-    if (samplerOptions->accSamplingFrequency == 0)
+    if (samplerConfig->accOptions->accSamplingFrequency == 0)
     {
         Serial.println("accSamplingFrequency is 0");
         while (1)
             ;
     }
-    samplerOptions->accSamplingLengthMs = round(static_cast<double>(samplerOptions->accNumSamples) / samplerOptions->accSamplingFrequency * 1000);
-    if (samplerOptions->accSamplingLengthMs == 0)
+    samplerConfig->accOptions->accSamplingLengthMs = round(static_cast<double>(samplerConfig->accOptions->accNumSamples) / samplerConfig->accOptions->accSamplingFrequency * 1000);
+    if (samplerConfig->accOptions->accSamplingLengthMs == 0)
     {
         Serial.println("accSamplingLengthMs is 0");
         while (1)
             ;
     }
 
-    samplingPeriodUs = round(1000000 * (1.0 / samplerOptions->accSamplingFrequency));
+    samplingPeriodUs = round(1000000 * (1.0 / samplerConfig->accOptions->accSamplingFrequency));
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (_samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Accelerometer initialized with options (AccNumSamples, AccSamplingFrequency, AccSamplingLengthMs):");
-        Serial.println(samplerOptions->accNumSamples);
-        Serial.println(samplerOptions->accSamplingFrequency);
-        Serial.println(samplerOptions->accSamplingLengthMs);
+        Serial.println(samplerConfig->accOptions->accNumSamples);
+        Serial.println(samplerConfig->accOptions->accSamplingFrequency);
+        Serial.println(samplerConfig->accOptions->accSamplingLengthMs);
         Serial.println();
     }
 }

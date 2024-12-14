@@ -1,12 +1,12 @@
 #ifndef ACCELEROMETER_H
 #define ACCELEROMETER_H
 
-#include "options.h"
+#include "config.h"
 
 class Accelerometer
 {
 private:
-    SamplerOptions *samplerOptions;
+    SamplerConfig *samplerConfig;
 
 public:
     // IMU sensor
@@ -23,7 +23,7 @@ public:
     /**
      * @param _samplerOptions The sampler options
      */
-    Accelerometer(SamplerOptions *_samplerOptions);
+    Accelerometer(SamplerConfig *samplerConfig);
 };
 
 #endif // ACCELEROMETER_H

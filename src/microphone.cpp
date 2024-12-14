@@ -1,7 +1,5 @@
 #include <Arduino.h>
 
-#include "options.h"
-#include "config.h"
 #include "microphone.h"
 #include "PDM.h"
 
@@ -38,42 +36,42 @@ namespace microphone
     }
 } // namespace
 
-Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerOptions *_samplerOptions)
+Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_samplerConfig)
     : sampleDataPoint(_sampleDataPoint),
-      samplerOptions(_samplerOptions),
+      samplerConfig(_samplerConfig),
       tempAudioBuffer(new int16_t[tempBufferSize])
 {
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Initializing microphone");
     }
 
     // Calculate the total number of samples to be collected based on the accSamplingLengthMs so the mic will record for as long as the acc data is collected
 
-    if (samplerOptions->accSamplingLengthMs == 0)
+    if (samplerConfig->accOptions->accSamplingLengthMs == 0)
     {
         Serial.println("accSamplingLengthMs is 0");
         while (1)
             ;
     }
 
-    samplerOptions->micNumSamples = round(static_cast<double>(samplerOptions->micSamplingRate * samplerOptions->accSamplingLengthMs) / 1000);
+    samplerConfig->micOptions->micNumSamples = round(static_cast<double>(samplerConfig->micOptions->micSamplingRate * samplerConfig->accOptions->accSamplingLengthMs) / 1000);
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.print("Total audio samples: ");
-        Serial.println(samplerOptions->micNumSamples);
+        Serial.println(samplerConfig->micOptions->micNumSamples);
     }
 
     // Re-initialize the sampleDataPoint audio buffer here because micNumSamples is now known
-    sampleDataPoint->audioBuffer = new int16_t[samplerOptions->micNumSamples];
+    sampleDataPoint->audioBuffer = new int16_t[samplerConfig->micOptions->micNumSamples];
     // Set the static buffer to the local buffer so the static callback can access it
     microphone::localTempAudioBuffer = tempAudioBuffer;
-    microphone::logLevel = samplerOptions->logLevel;
+    microphone::logLevel = samplerConfig->samplerOptions->logLevel;
 
     PDM.onReceive(microphone::onPDMdataCallback);
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Microphone initialized");
         Serial.println();
@@ -82,12 +80,12 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerOptions *_sampl
 
 void Microphone::startAudioSampling()
 {
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling audio from microphone...");
     }
 
-    if (!PDM.begin(1, samplerOptions->micSamplingRate))
+    if (!PDM.begin(1, samplerConfig->micOptions->micSamplingRate))
     {
         Serial.println("Failed to start PDM!");
         while (1)
@@ -101,7 +99,7 @@ void Microphone::stopAudioSampling()
     bufferCallback();
     PDM.end();
 
-    if (samplerOptions->logLevel >= LogLevel::Info)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Audio from microphone sampled\n");
     }
@@ -113,7 +111,7 @@ void Microphone::bufferCallback()
         return;
 
     microphone::hasNewData = false;
-    for (int i = 0; i < tempBufferSize && sampleIndex < samplerOptions->micNumSamples; i++)
+    for (int i = 0; i < tempBufferSize && sampleIndex < samplerConfig->micOptions->micNumSamples; i++)
     {
         sampleDataPoint->audioBuffer[sampleIndex++] = tempAudioBuffer[i];
     }
