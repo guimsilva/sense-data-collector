@@ -40,6 +40,17 @@ enum class MovingDirection
     Down
 };
 
+struct MovingTrigger
+{
+    MovingTrigger(MovingStatus _movingStatus = MovingStatus::Stopped, MovingDirection _movingDirection = MovingDirection::None)
+        : movingStatus(_movingStatus),
+          movingDirection(_movingDirection)
+    {
+    }
+    MovingStatus movingStatus;
+    MovingDirection movingDirection;
+};
+
 enum class LogLevel
 {
     None,
@@ -110,7 +121,7 @@ struct SamplerOptions
         unsigned long _intervalInMillis = 0,
         Triggers *_triggers = nullptr,
         DataSensor *_dataSensors = nullptr,
-        std::tuple<MovingStatus, MovingDirection> *_movementTriggers = nullptr,
+        MovingTrigger *_movementTriggers = nullptr,
         int16_t *_accThresholdTrigger = nullptr,
         int16_t _audioBufferSizeTrigger = 0)
         : saveToSdCard(_saveToSdCard),
@@ -174,14 +185,14 @@ struct SamplerOptions
             if (logLevel >= LogLevel::Info)
                 Serial.println("Setting movementTriggers to default");
 
-            movementTriggers = new std::tuple<MovingStatus, MovingDirection>[7];
-            movementTriggers[0] = std::make_tuple(MovingStatus::Stopped, MovingDirection::None);
-            movementTriggers[1] = std::make_tuple(MovingStatus::Accelerating, MovingDirection::Up);
-            movementTriggers[2] = std::make_tuple(MovingStatus::Accelerating, MovingDirection::Down);
-            movementTriggers[3] = std::make_tuple(MovingStatus::Steady, MovingDirection::Up);
-            movementTriggers[4] = std::make_tuple(MovingStatus::Steady, MovingDirection::Down);
-            movementTriggers[5] = std::make_tuple(MovingStatus::Stopping, MovingDirection::Up);
-            movementTriggers[6] = std::make_tuple(MovingStatus::Stopping, MovingDirection::Down);
+            movementTriggers = new MovingTrigger[7];
+            movementTriggers[0] = MovingTrigger(MovingStatus::Stopped, MovingDirection::None);
+            movementTriggers[1] = MovingTrigger(MovingStatus::Accelerating, MovingDirection::Up);
+            movementTriggers[2] = MovingTrigger(MovingStatus::Accelerating, MovingDirection::Down);
+            movementTriggers[3] = MovingTrigger(MovingStatus::Steady, MovingDirection::Up);
+            movementTriggers[4] = MovingTrigger(MovingStatus::Steady, MovingDirection::Down);
+            movementTriggers[5] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Up);
+            movementTriggers[6] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Down);
         }
         else
         {
@@ -250,7 +261,7 @@ struct SamplerOptions
     /**
      * Movements that can trigger data collection
      */
-    std::tuple<MovingStatus, MovingDirection> *movementTriggers;
+    MovingTrigger *movementTriggers;
 
     /**
      * Min audio buffer size to trigger data collection.

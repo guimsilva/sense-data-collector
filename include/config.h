@@ -34,7 +34,7 @@ public:
           accOptions(_accOptions),
           micOptions(_micOptions)
     {
-        for (int i = 0; i < sizeof(samplerOptions->triggers) / sizeof(samplerOptions->triggers[0]); i++)
+        for (unsigned int i = 0; i < sizeof(samplerOptions->triggers) / sizeof(samplerOptions->triggers[0]); i++)
         {
             if (samplerOptions->triggers[i] == Triggers::Interval)
             {

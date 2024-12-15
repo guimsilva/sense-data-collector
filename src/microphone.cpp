@@ -128,5 +128,5 @@ void Microphone::bufferCallback()
 bool Microphone::isTriggered()
 {
     return microphone::hasNewData &&
-           samplerConfig->samplerOptions->audioBufferSizeTrigger >= static_cast<unsigned int>(sizeof(tempAudioBuffer) / sizeof(tempAudioBuffer[0]));
+           static_cast<unsigned int>(samplerConfig->samplerOptions->audioBufferSizeTrigger) >= (sizeof(tempAudioBuffer) / sizeof(tempAudioBuffer[0]));
 }

@@ -35,7 +35,7 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
     barometer = new Barometer(sampleDataPoint, samplerConfig);
     microphone = new Microphone(sampleDataPoint, samplerConfig);
 
-    for (int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
+    for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
     {
         if (samplerConfig->samplerOptions->triggers[i] == Triggers::Microphone)
         {
@@ -51,7 +51,7 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
     {
         Serial.println("Sampler initialized with config..:");
         Serial.println("Triggers:");
-        for (int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
+        for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
         {
             Serial.print((int)samplerConfig->samplerOptions->triggers[i]);
             if (i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]) - 1)
@@ -61,7 +61,7 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
         }
         Serial.println();
         Serial.println("Data sensors:");
-        for (int i = 0; i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]); i++)
+        for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]); i++)
         {
             Serial.print((int)samplerConfig->samplerOptions->dataSensors[i]);
             if (i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]) - 1)
@@ -101,7 +101,7 @@ void Sampler::copySample(SampleDataPoint *newSample)
         newSample->accFrequenciesZ[j] = sampleDataPoint->accFrequenciesZ[j];
     }
 
-    for (int j = 0; j < sizeof(sampleDataPoint->audioBuffer) / sizeof(sampleDataPoint->audioBuffer[0]); j++)
+    for (unsigned int j = 0; j < sizeof(sampleDataPoint->audioBuffer) / sizeof(sampleDataPoint->audioBuffer[0]); j++)
     {
         newSample->audioBuffer[j] = sampleDataPoint->audioBuffer[j];
     }
@@ -339,7 +339,7 @@ void Sampler::sampleData()
     // If it has a mic trigger and senor data and not collecting acc data, then wait for the mic to sample the expected number of samples as it would be done in sampleFrequencies
     if (samplerConfig->samplerOptions->hasMicTrigger && samplerConfig->samplerOptions->hasMicSensor && !samplerConfig->samplerOptions->hasAccSensor)
     {
-        while (samplerConfig->micOptions->micSamplingLengthMs < (currentMillis - previousMillis))
+        while (static_cast<unsigned long>(samplerConfig->micOptions->micSamplingLengthMs) < (currentMillis - previousMillis))
         {
             microphone->bufferCallback();
             currentMillis = millis();
