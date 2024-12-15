@@ -19,7 +19,7 @@ void setup()
     ;
   Serial.println("\nSerial started\n");
 
-  samplerOptions = new SamplerOptions(false, LogLevel::Info, 3);
+  samplerOptions = new SamplerOptions(true, LogLevel::Info, 3);
   accOptions = new AccOptions();
   micOptions = new MicOptions();
   samplerConfig = new SamplerConfig(samplerOptions, accOptions, micOptions);

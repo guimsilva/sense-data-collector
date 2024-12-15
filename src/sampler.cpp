@@ -31,9 +31,18 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
             Serial.println("Skipping SD card");
     }
 
-    accelerometer = new Accelerometer(samplerConfig);
-    barometer = new Barometer(sampleDataPoint, samplerConfig);
-    microphone = new Microphone(sampleDataPoint, samplerConfig);
+    if (samplerConfig->samplerOptions->hasAccSensor)
+    {
+        accelerometer = new Accelerometer(samplerConfig);
+    }
+    if (samplerConfig->samplerOptions->hasBarSensor)
+    {
+        barometer = new Barometer(sampleDataPoint, samplerConfig);
+    }
+    if (samplerConfig->samplerOptions->hasMicSensor)
+    {
+        microphone = new Microphone(sampleDataPoint, samplerConfig);
+    }
 
     for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
     {
@@ -336,8 +345,8 @@ void Sampler::sampleData()
     // Audio sampling is asynchronous, so it won't block sampleFrequencies
     microphone->startAudioSampling();
 
-    // If it has a mic trigger and senor data and not collecting acc data, then wait for the mic to sample the expected number of samples as it would be done in sampleFrequencies
-    if (samplerConfig->samplerOptions->hasMicTrigger && samplerConfig->samplerOptions->hasMicSensor && !samplerConfig->samplerOptions->hasAccSensor)
+    // If it has mic sensor and no acc sensor, then wait for the mic to sample the expected number of samples as it would be done in sampleFrequencies otherwise
+    if (samplerConfig->samplerOptions->hasMicSensor && !samplerConfig->samplerOptions->hasAccSensor)
     {
         while (static_cast<unsigned long>(samplerConfig->micOptions->micSamplingLengthMs) < (currentMillis - previousMillis))
         {

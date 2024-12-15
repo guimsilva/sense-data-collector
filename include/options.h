@@ -276,15 +276,15 @@ struct SamplerOptions
     LogLevel logLevel;
 
     // Internal - convert triggers into boolean values for faster checking
-    bool hasIntervalTrigger;
-    bool hasAccRawTrigger;
-    bool hasAccMovementTrigger;
-    bool hasMicTrigger;
+    bool hasIntervalTrigger = false;
+    bool hasAccRawTrigger = false;
+    bool hasAccMovementTrigger = false;
+    bool hasMicTrigger = false;
 
     // Convert sensor data into boolean values for faster checking
-    bool hasAccSensor;
-    bool hasMicSensor;
-    bool hasBarSensor;
+    bool hasAccSensor = false;
+    bool hasMicSensor = false;
+    bool hasBarSensor = false;
 };
 
 #endif // OPTIONS_H

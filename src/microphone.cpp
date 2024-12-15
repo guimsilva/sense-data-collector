@@ -37,10 +37,17 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_sample
             ;
     }
 
-    samplerConfig->micOptions->micNumSamples = round(static_cast<double>(samplerConfig->micOptions->micSamplingRate * samplerConfig->accOptions->accSamplingLengthMs) / 1000);
-
+    if (samplerConfig->samplerOptions->hasAccSensor)
+    {
+        samplerConfig->micOptions->micNumSamples = round(static_cast<double>(samplerConfig->micOptions->micSamplingRate * samplerConfig->accOptions->accSamplingLengthMs) / 1000);
+    }
+    else
+    {
+        samplerConfig->micOptions->micNumSamples = round(static_cast<double>(samplerConfig->micOptions->micSamplingRate * samplerConfig->micOptions->micSamplingLengthMs) / 1000);
+    }
     // Re-initialize the sampleDataPoint audio buffer here because micNumSamples is now known
     sampleDataPoint->audioBuffer = new int16_t[samplerConfig->micOptions->micNumSamples];
+
     // Set the static buffer to the local buffer so the static callback can access it
     microphone::localTempAudioBuffer = tempAudioBuffer;
 
