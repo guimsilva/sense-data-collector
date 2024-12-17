@@ -79,18 +79,6 @@ void Microphone::startAudioSampling()
                 ;
         }
     }
-    else
-    {
-        sampleIndex = 0;
-        for (int i = 0; i < samplerConfig->micOptions->micNumSamples; i++)
-        {
-            sampleDataPoint->audioBuffer[i] = 0;
-        }
-        for (int i = 0; i < tempBufferSize; i++)
-        {
-            tempAudioBuffer[i] = 0;
-        }
-    }
 }
 
 void Microphone::stopAudioSampling()
@@ -111,6 +99,7 @@ void Microphone::stopAudioSampling()
 
 /**
  * Used for both Interval and Microphone triggers.
+ * Copy the tempAudioBuffer to the sampleDataPoint audioBuffer on each callback.
  */
 void Microphone::bufferCallback()
 {
@@ -123,6 +112,12 @@ void Microphone::bufferCallback()
     {
         sampleDataPoint->audioBuffer[sampleIndex++] = tempAudioBuffer[i];
     }
+
+    // Reset the temp buffer
+    for (int i = 0; i < tempBufferSize; i++)
+    {
+        tempAudioBuffer[i] = 0;
+    }
 }
 
 /**
@@ -134,6 +129,15 @@ void Microphone::bufferCallback()
  */
 bool Microphone::isTriggered()
 {
+    int lastDataIndex = 0;
+    for (int i = 0; i < tempBufferSize; i++)
+    {
+        if (tempAudioBuffer[i] != 0)
+        {
+            lastDataIndex = i;
+        }
+    }
+
     return microphone::hasNewData &&
-           static_cast<unsigned int>(samplerConfig->samplerOptions->audioBufferSizeTrigger) >= (sizeof(tempAudioBuffer) / sizeof(tempAudioBuffer[0]));
+           samplerConfig->samplerOptions->audioBufferSizeTrigger >= lastDataIndex;
 }

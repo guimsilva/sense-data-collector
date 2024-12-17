@@ -105,7 +105,9 @@ struct SamplerOptions
 {
     /**
      * @param _triggers Triggers that can initiate data collection. Default is Interval
+     * @param _sizeofTriggers Size of the triggers array. Default is 1
      * @param _dataSensors Supported sensors for data collection. Default is Accelerometer, Microphone, Barometer
+     * @param _sizeofDataSensors Size of the dataSensors array. Default is 3
      * @param _movementTriggers Movements that can trigger data collection. Default is Stopped, None
      * @param _accThresholdTrigger Raw acc threshold values to trigger data collection. Default is 100, 100, 100
      * @param _audioBufferSizeTrigger Min audio buffer size to trigger data collection. Default is 1000
@@ -120,7 +122,9 @@ struct SamplerOptions
         int16_t _sampleDataPointBufferSize = 10,
         unsigned long _intervalInMillis = 0,
         Triggers *_triggers = nullptr,
+        unsigned short _sizeofTriggers = 1,
         DataSensor *_dataSensors = nullptr,
+        unsigned short _sizeofDataSensors = 3,
         MovingTrigger *_movementTriggers = nullptr,
         int16_t *_accThresholdTrigger = nullptr,
         int16_t _audioBufferSizeTrigger = 0)
@@ -136,6 +140,7 @@ struct SamplerOptions
 
             triggers = new Triggers[1];
             triggers[0] = Triggers::Interval;
+            sizeofTriggers = 1;
         }
         else
         {
@@ -143,6 +148,7 @@ struct SamplerOptions
                 Serial.println("Setting triggers to user defined");
 
             triggers = _triggers;
+            sizeofTriggers = _sizeofTriggers;
         }
 
         if (_dataSensors == nullptr)
@@ -154,6 +160,7 @@ struct SamplerOptions
             dataSensors[0] = DataSensor::Accelerometer;
             dataSensors[1] = DataSensor::Microphone;
             dataSensors[2] = DataSensor::Barometer;
+            sizeofDataSensors = 3;
         }
         else
         {
@@ -161,6 +168,7 @@ struct SamplerOptions
                 Serial.println("Setting dataSensors to user defined");
 
             dataSensors = _dataSensors;
+            sizeofDataSensors = _sizeofDataSensors;
         }
 
         if (_intervalInMillis == 0 && std::find(triggers, triggers + 1, Triggers::Interval) != triggers + 1)
@@ -242,11 +250,13 @@ struct SamplerOptions
      * Triggers that can initiate data collection
      */
     Triggers *triggers;
+    unsigned short sizeofTriggers;
 
     /**
      * Supported sensors for data collection
      */
     DataSensor *dataSensors;
+    unsigned short sizeofDataSensors;
 
     /**
      * Interval at which allow data collection (milliseconds)

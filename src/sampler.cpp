@@ -44,7 +44,7 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
         microphone = new Microphone(sampleDataPoint, samplerConfig);
     }
 
-    for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
+    for (unsigned int i = 0; i < samplerConfig->samplerOptions->sizeofTriggers; i++)
     {
         if (samplerConfig->samplerOptions->triggers[i] == Triggers::Microphone)
         {
@@ -60,23 +60,35 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
     {
         Serial.println("Sampler initialized with config..:");
         Serial.println("Triggers:");
-        for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]); i++)
+        if (samplerConfig->samplerOptions->hasIntervalTrigger)
         {
-            Serial.print((int)samplerConfig->samplerOptions->triggers[i]);
-            if (i < sizeof(samplerConfig->samplerOptions->triggers) / sizeof(samplerConfig->samplerOptions->triggers[0]) - 1)
-            {
-                Serial.print(", ");
-            }
+            Serial.println("Interval");
+        }
+        if (samplerConfig->samplerOptions->hasAccMovementTrigger)
+        {
+            Serial.println("AccMovement");
+        }
+        if (samplerConfig->samplerOptions->hasAccRawTrigger)
+        {
+            Serial.println("AccRaw");
+        }
+        if (samplerConfig->samplerOptions->hasMicTrigger)
+        {
+            Serial.println("Mic");
         }
         Serial.println();
         Serial.println("Data sensors:");
-        for (unsigned int i = 0; i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]); i++)
+        if (samplerConfig->samplerOptions->hasAccSensor)
         {
-            Serial.print((int)samplerConfig->samplerOptions->dataSensors[i]);
-            if (i < sizeof(samplerConfig->samplerOptions->dataSensors) / sizeof(samplerConfig->samplerOptions->dataSensors[0]) - 1)
-            {
-                Serial.print(", ");
-            }
+            Serial.println("Accelerometer");
+        }
+        if (samplerConfig->samplerOptions->hasMicSensor)
+        {
+            Serial.println("Microphone");
+        }
+        if (samplerConfig->samplerOptions->hasBarSensor)
+        {
+            Serial.println("Barometer");
         }
         Serial.println();
         Serial.println("Sampler Options (SampleDataPointBufferSize, SaveToSdCard):");
@@ -110,7 +122,7 @@ void Sampler::copySample(SampleDataPoint *newSample)
         newSample->accFrequenciesZ[j] = sampleDataPoint->accFrequenciesZ[j];
     }
 
-    for (unsigned int j = 0; j < sizeof(sampleDataPoint->audioBuffer) / sizeof(sampleDataPoint->audioBuffer[0]); j++)
+    for (int j = 0; j < samplerConfig->micOptions->micNumSamples; j++)
     {
         newSample->audioBuffer[j] = sampleDataPoint->audioBuffer[j];
     }
@@ -242,6 +254,11 @@ void Sampler::sampleFrequencies()
         accelerometer->vRealX[i] = accelerometer->accX;
         accelerometer->vRealY[i] = accelerometer->accY;
         accelerometer->vRealZ[i] = accelerometer->accZ;
+
+        // Reset the last axies raw data
+        accelerometer->accX = 0.0;
+        accelerometer->accY = 0.0;
+        accelerometer->accZ = 0.0;
 
         // Call it once now then keep calling it until the next sample
         microphone->bufferCallback();

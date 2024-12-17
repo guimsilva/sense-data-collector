@@ -34,7 +34,7 @@ public:
           accOptions(_accOptions),
           micOptions(_micOptions)
     {
-        for (unsigned int i = 0; i < sizeof(samplerOptions->triggers) / sizeof(samplerOptions->triggers[0]); i++)
+        for (unsigned int i = 0; i < samplerOptions->sizeofTriggers; i++)
         {
             if (samplerOptions->triggers[i] == Triggers::Interval)
             {
@@ -63,7 +63,7 @@ public:
                 ;
         }
 
-        for (int i = 0; i < static_cast<int>(sizeof(samplerOptions->dataSensors) / sizeof(samplerOptions->dataSensors[0])); i++)
+        for (int i = 0; i < samplerOptions->sizeofDataSensors; i++)
         {
             if (samplerOptions->dataSensors[i] == DataSensor::Accelerometer)
             {
