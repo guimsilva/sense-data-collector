@@ -53,6 +53,12 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_sample
 
     PDM.onReceive(microphone::onPDMdataCallback);
 
+    // For mic trigger, the PDM will be always on
+    if (samplerConfig->samplerOptions->hasMicTrigger)
+    {
+        startAudioSampling();
+    }
+
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Microphone initialized");
@@ -62,9 +68,6 @@ Microphone::Microphone(SampleDataPoint *_sampleDataPoint, SamplerConfig *_sample
 
 void Microphone::startAudioSampling()
 {
-    if (!samplerConfig->samplerOptions->hasMicTrigger)
-        return;
-
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
         Serial.println("Sampling audio from microphone...");

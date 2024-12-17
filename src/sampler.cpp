@@ -44,14 +44,6 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
         microphone = new Microphone(sampleDataPoint, samplerConfig);
     }
 
-    for (unsigned int i = 0; i < samplerConfig->samplerOptions->sizeofTriggers; i++)
-    {
-        if (samplerConfig->samplerOptions->triggers[i] == Triggers::Microphone)
-        {
-            microphone->startAudioSampling();
-        }
-    }
-
     previousMillis = 0;
     currentMillis = 0;
     startDataCollection = false;
@@ -247,12 +239,14 @@ void Sampler::sampleFrequencies()
         accelerometer->accY = 0.0;
         accelerometer->accZ = 0.0;
 
-        // Call it once now then keep calling it until the next sample
-        microphone->bufferCallback();
+        if (samplerConfig->samplerOptions->hasMicSensor)
+            // Call it once now then keep calling it until the next sample
+            microphone->bufferCallback();
 
         while (micros() < (currentMicroseconds + accelerometer->samplingPeriodUs))
         {
-            microphone->bufferCallback();
+            if (samplerConfig->samplerOptions->hasMicSensor)
+                microphone->bufferCallback();
         }; // wait for next sample
     }
 
@@ -332,24 +326,32 @@ void Sampler::sampleData()
     // Sample Barometer first as the frequencies will block execution for some time
     barometer->sampleBarometer();
 
-    // Audio sampling is asynchronous, so it won't block sampleFrequencies
-    microphone->startAudioSampling();
-
-    // If it has mic sensor and no acc sensor, then wait for the mic to sample the expected number of samples as it would be done in sampleFrequencies otherwise
-    if (samplerConfig->samplerOptions->hasMicSensor && !samplerConfig->samplerOptions->hasAccSensor)
+    if (samplerConfig->samplerOptions->hasMicSensor)
     {
-        while (static_cast<unsigned long>(samplerConfig->micOptions->micSamplingLengthMs) < (currentMillis - previousMillis))
+        // If it has mic trigger then it's already started
+        if (!samplerConfig->samplerOptions->hasMicTrigger)
+            // Audio sampling is asynchronous, so it won't block sampleFrequencies
+            microphone->startAudioSampling();
+
+        // If it has mic but no acc sensor, then wait for the mic to sample the expected number of samples as it would be done in sampleFrequencies() otherwise
+        if (!samplerConfig->samplerOptions->hasAccSensor)
         {
-            microphone->bufferCallback();
-            currentMillis = millis();
+            while (static_cast<unsigned long>(samplerConfig->micOptions->micSamplingLengthMs) < (currentMillis - previousMillis))
+            {
+                if (samplerConfig->samplerOptions->hasMicSensor)
+                    microphone->bufferCallback();
+
+                currentMillis = millis();
+            }
         }
     }
 
     // Sample acc data at the same time as audio sampling
     sampleFrequencies();
 
-    // Stop audio sampling
-    microphone->stopAudioSampling();
+    if (samplerConfig->samplerOptions->hasMicSensor)
+        // Stop audio sampling
+        microphone->stopAudioSampling();
 
     // while (1)
     //     ;
