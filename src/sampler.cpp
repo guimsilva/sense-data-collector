@@ -225,21 +225,8 @@ void Sampler::sampleFrequencies()
     for (int i = 0; i < samplerConfig->accOptions->accNumSamples; i++)
     {
         currentMicroseconds = micros();
-        if (IMU.accelerationAvailable())
-        {
-            IMU.readAcceleration(accelerometer->accX, accelerometer->accY, accelerometer->accZ);
-            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
-                Serial.println("Read acceleration data! >>> ");
-        }
-        else
-        {
-            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
-                Serial.println("Failed to read acceleration data! <<< ");
 
-            accelerometer->accX = 0.0;
-            accelerometer->accY = 0.0;
-            accelerometer->accZ = 0.0;
-        }
+        accelerometer->sampleAccelerometer();
 
         if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
         {
@@ -308,21 +295,7 @@ void Sampler::checkTriggers()
     }
     else if (samplerConfig->samplerOptions->hasAccRawTrigger)
     {
-        if (IMU.accelerationAvailable())
-        {
-            IMU.readAcceleration(accelerometer->accX, accelerometer->accY, accelerometer->accZ);
-            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
-                Serial.println("Read acceleration data! >>> ");
-        }
-        else
-        {
-            if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
-                Serial.println("Failed to read acceleration data! <<< ");
-
-            accelerometer->accX = 0.0;
-            accelerometer->accY = 0.0;
-            accelerometer->accZ = 0.0;
-        }
+        accelerometer->sampleAccelerometer();
 
         if (abs(accelerometer->accX) > samplerConfig->samplerOptions->accThresholdTrigger[0] ||
             abs(accelerometer->accY) > samplerConfig->samplerOptions->accThresholdTrigger[1] ||

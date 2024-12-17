@@ -24,6 +24,11 @@ public:
      * @param _samplerOptions The sampler options
      */
     Accelerometer(SamplerConfig *samplerConfig);
+
+    /**
+     * Sample the accelerometer data
+     */
+    void sampleAccelerometer();
 };
 
 #endif // ACCELEROMETER_H

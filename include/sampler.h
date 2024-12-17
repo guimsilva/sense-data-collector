@@ -39,7 +39,9 @@ private:
     // Temporarily stores the sample json to be saved to file
     JsonDocument jsonDoc;
 
-    // Sample acc data
+    /**
+     * Sample the accelerometer data as well as the audio data
+     */
     void sampleFrequencies();
 
     // Copy the sample data point to the buffer
@@ -48,7 +50,7 @@ private:
     // Reset the sample data point
     void resetSample(SampleDataPoint *_sample);
 
-    // Save the samples to file
+    // Save the samples to file when sd card is available
     void saveSamplesToFile();
 
     // Sample the data when the triggers are met
