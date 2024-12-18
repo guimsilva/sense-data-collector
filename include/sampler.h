@@ -56,6 +56,11 @@ private:
     // Sample the data when the triggers are met
     void sampleData();
 
+    /**
+     * Detect vertical movement based on the barometer and acc data
+     */
+    void detectVerticalMovement(MovingStatus *movingStatus, MovingDirection *movingDirection, float *movingSpeed);
+
 public:
     /**
      * @param _options The sampler options

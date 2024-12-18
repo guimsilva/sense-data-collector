@@ -109,6 +109,7 @@ struct SamplerOptions
      * @param _dataSensors Supported sensors for data collection. Default is Accelerometer, Microphone, Barometer
      * @param _sizeofDataSensors Size of the dataSensors array. Default is 3
      * @param _movementTriggers Movements that can trigger data collection. Default is Stopped, None
+     * @param _sizeofMovementTriggers Size of the movementTriggers array. Default is 7 (all possible movements currently)
      * @param _accThresholdTrigger Raw acc threshold values to trigger data collection. Default is 100, 100, 100
      * @param _audioBufferSizeTrigger Min audio buffer size to trigger data collection. Default is 1000
      * @param _intervalInMillis Interval at which allow data collection (milliseconds). Default is 5000
@@ -126,6 +127,7 @@ struct SamplerOptions
         DataSensor *_dataSensors = nullptr,
         unsigned short _sizeofDataSensors = 3,
         MovingTrigger *_movementTriggers = nullptr,
+        unsigned short _sizeofMovementTriggers = 7,
         int16_t *_accThresholdTrigger = nullptr,
         int16_t _audioBufferSizeTrigger = 0)
         : saveToSdCard(_saveToSdCard),
@@ -201,6 +203,7 @@ struct SamplerOptions
             movementTriggers[4] = MovingTrigger(MovingStatus::Steady, MovingDirection::Down);
             movementTriggers[5] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Up);
             movementTriggers[6] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Down);
+            sizeofMovementTriggers = 7;
         }
         else
         {
@@ -272,6 +275,7 @@ struct SamplerOptions
      * Movements that can trigger data collection
      */
     MovingTrigger *movementTriggers;
+    unsigned short sizeofMovementTriggers;
 
     /**
      * Min audio buffer size to trigger data collection.

@@ -270,6 +270,70 @@ void Sampler::sampleFrequencies()
     }
 }
 
+/**
+ * The reason to have this here intead of in the barometer class is because
+ * it's possible we also include acc data in the future to improve the detection of movement.
+ */
+void Sampler::detectVerticalMovement(MovingStatus *movingStatus, MovingDirection *movingDirection, float *movingSpeedMpS)
+{
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+    {
+        Serial.println("Detecting vertical movement...");
+    }
+    static float currentAltitudeMeters = barometer->getAltitude();
+    ;
+    static unsigned long currentTimestamp = millis();
+    static float lastAltitudeMeters = 0.0;
+    static unsigned long lastTimestamp = 0;
+    static float lastSpeedMpS = 0.0;
+
+    unsigned long timeDifference = currentTimestamp - lastTimestamp;
+    float altitudeDifference = currentAltitudeMeters - lastAltitudeMeters;
+
+    *movingSpeedMpS = abs(altitudeDifference / timeDifference);
+
+    if (*movingSpeedMpS < 0.1)
+    {
+        *movingStatus = MovingStatus::Stopped;
+    }
+    else
+    {
+        if (*movingSpeedMpS > (lastSpeedMpS + 0.1))
+        {
+            *movingStatus = MovingStatus::Accelerating;
+        }
+        else
+        {
+            *movingStatus = MovingStatus::Stopping;
+        }
+
+        if (altitudeDifference > 0.1)
+        {
+            *movingDirection = MovingDirection::Up;
+        }
+        else if (altitudeDifference < -0.1)
+        {
+            *movingDirection = MovingDirection::Down;
+        }
+    }
+
+    lastAltitudeMeters = currentAltitudeMeters;
+    lastTimestamp = currentTimestamp;
+    lastSpeedMpS = *movingSpeedMpS;
+
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+    {
+        Serial.print("Moving status: ");
+        Serial.println(*movingStatus == MovingStatus::Stopped ? "Stopped" : *movingStatus == MovingStatus::Accelerating ? "Accelerating"
+                                                                                                                        : "Stopping");
+        Serial.print("Moving direction: ");
+        Serial.println(*movingDirection == MovingDirection::Up ? "Up" : "Down");
+        Serial.print("Moving speed: ");
+        Serial.print(*movingSpeedMpS);
+        Serial.println(" m/s");
+    }
+}
+
 void Sampler::checkTriggers()
 {
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
@@ -285,7 +349,30 @@ void Sampler::checkTriggers()
     }
     else if (samplerConfig->samplerOptions->hasAccMovementTrigger)
     {
-        // @todo: Implement acc movement trigger
+        static MovingTrigger lastTrigger;
+
+        MovingStatus movingStatus;
+        MovingDirection movingDirection;
+        float movingSpeed;
+        detectVerticalMovement(&movingStatus, &movingDirection, &movingSpeed);
+
+        for (int i = 0; i < samplerConfig->samplerOptions->sizeofMovementTriggers; i++)
+        {
+            if (samplerConfig->samplerOptions->movementTriggers[i].movingStatus == movingStatus &&
+                samplerConfig->samplerOptions->movementTriggers[i].movingDirection == movingDirection)
+            {
+                // If the last trigger is the same as the current one, then don't start data collection
+                if (lastTrigger.movingStatus == movingStatus && lastTrigger.movingDirection == movingDirection)
+                {
+                    break;
+                }
+
+                lastTrigger.movingStatus = movingStatus;
+                lastTrigger.movingDirection = movingDirection;
+                startDataCollection = true;
+                break;
+            }
+        }
     }
     else if (samplerConfig->samplerOptions->hasAccRawTrigger)
     {
@@ -309,7 +396,10 @@ void Sampler::checkTriggers()
     }
 
     if (!startDataCollection)
+    {
+        delay(100);
         return;
+    }
 
     sampleData();
 }

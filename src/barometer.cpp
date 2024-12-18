@@ -2,6 +2,7 @@
 #include <Arduino_LPS22HB.h>
 
 #include "barometer.h"
+#include "accelerometer.h"
 
 Barometer::Barometer(SampleDataPoint *_sampleDataPoint, SamplerConfig *_samplerConfig)
     : sampleDataPoint(_sampleDataPoint),

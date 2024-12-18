@@ -33,6 +33,8 @@ public:
     Barometer(SampleDataPoint *_sampleDataPoint, SamplerConfig *_samplerConfig);
 
     void sampleBarometer();
+
+    float getAltitude() { return altitudeMeters; }
 };
 
 #endif // BAROMETER_H
