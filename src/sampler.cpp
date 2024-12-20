@@ -269,8 +269,8 @@ bool Sampler::hasNewMovement()
         Serial.println("Detecting vertical movement...");
     }
 
+    static MovingTrigger lastTrigger = {sampleDataPoint->movingStatus, sampleDataPoint->movingDirection};
     bool hasNewTrigger = false;
-    static MovingTrigger lastTrigger;
 
     barometer->samplePressure(false);
 

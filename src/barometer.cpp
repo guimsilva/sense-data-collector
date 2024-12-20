@@ -112,13 +112,16 @@ void Barometer::samplePressure(bool logData)
     float altitudeDifference = altitudeMeters - lastAltitudeMeters;
     movingSpeed = abs(altitudeDifference / timeDifference);
 
-    if (movingSpeed < 0.2)
+    if (altitudeDifference > 0.7)
     {
-        movingStatus = MovingStatus::Stopped;
-        movingDirection = MovingDirection::None;
-        movingSpeed = 0.0;
+        movingDirection = MovingDirection::Up;
     }
-    else
+    else if (altitudeDifference < -0.7)
+    {
+        movingDirection = MovingDirection::Down;
+    }
+
+    if (movingDirection != MovingDirection::None)
     {
         if (movingSpeed > (lastSpeed + 0.1))
         {
@@ -132,15 +135,13 @@ void Barometer::samplePressure(bool logData)
         {
             movingStatus = MovingStatus::Steady;
         }
+    }
 
-        if (altitudeDifference > 0.5)
-        {
-            movingDirection = MovingDirection::Up;
-        }
-        else if (altitudeDifference < -0.5)
-        {
-            movingDirection = MovingDirection::Down;
-        }
+    // If nothing important has changed, return
+    if (movingStatus == sampleDataPoint->movingStatus &&
+        movingDirection == sampleDataPoint->movingDirection)
+    {
+        return;
     }
 
     sampleDataPoint->movingStatus = movingStatus;
