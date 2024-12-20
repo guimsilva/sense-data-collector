@@ -36,66 +36,30 @@ void Barometer::getPressure()
         altitudeMeters = 44330 * (1 - pow(currentPressureKpa / 101.325, 1 / 5.255));
     }
 
-    Serial.print("Altitude according to kPa is = ");
-    Serial.print(altitudeMeters);
-    Serial.println(" m");
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+    {
+        Serial.print("Altitude according to kPa is = ");
+        Serial.print(altitudeMeters);
+        Serial.println(" m");
+    }
 }
 
 void Barometer::getTemperature()
 {
     temperatureC = BARO.readTemperature();
-    Serial.print("Temperature is = ");
-    Serial.print(temperatureC);
-    Serial.println(" C");
-}
-
-/** @todo fix/improve this */
-void Barometer::getMovingStatus()
-{
-    if (currentPressureKpa != newPressure)
-    {
-        isMoving = true;
-        movingSpeed = (currentPressureKpa - newPressure) / 2;
-    }
-    else
-    {
-        isMoving = false;
-        movingSpeed = 0.0f;
-    }
-
-    // This is probably not right
-    movingStatus = isMoving ? (movingSpeed > 0 ? MovingStatus::Steady : MovingStatus::Stopped) : MovingStatus::Stopped;
 
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
     {
-        Serial.print("Moving status: ");
-        Serial.println(isMoving ? "Moving" : "Stopped");
-        Serial.print("Moving speed: ");
-        Serial.print(movingSpeed);
-        Serial.println(" kPa/s");
+        Serial.print("Temperature is = ");
+        Serial.print(temperatureC);
+        Serial.println(" C");
     }
 }
 
-void Barometer::sampleBarometer()
+void Barometer::sampleTemperature()
 {
     if (!samplerConfig->samplerOptions->hasBarSensor)
         return;
-
-    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
-    {
-        Serial.println("Sampling pressure data...");
-    }
-
-    getPressure();
-    sampleDataPoint->pressureKpa = currentPressureKpa;
-    sampleDataPoint->altitudeMeters = altitudeMeters;
-    sampleDataPoint->movingStatus = movingStatus;
-    sampleDataPoint->movingSpeed = movingSpeed;
-
-    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
-    {
-        Serial.println("Pressure data sampled\n");
-    }
 
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
@@ -109,4 +73,81 @@ void Barometer::sampleBarometer()
     {
         Serial.println("Temperature data sampled\n");
     }
+}
+
+void Barometer::samplePressure(bool logData)
+{
+    if (!samplerConfig->samplerOptions->hasBarSensor)
+        return;
+
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info && logData)
+    {
+        Serial.println("Sampling pressure data...");
+    }
+
+    getPressure();
+    sampleDataPoint->pressureKpa = currentPressureKpa;
+    sampleDataPoint->altitudeMeters = altitudeMeters;
+
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info && logData)
+    {
+        Serial.println("Pressure data sampled\n");
+    }
+
+    unsigned long currentTimestamp = millis();
+    MovingStatus movingStatus = MovingStatus::Stopped;
+    MovingDirection movingDirection = MovingDirection::None;
+    float movingSpeed = 0.0;
+
+    static unsigned long lastTimestamp = 0;
+    static float lastAltitudeMeters = 0.0;
+    static float lastSpeed = 0.0;
+    if (lastTimestamp == 0)
+    {
+        lastTimestamp = currentTimestamp;
+        lastAltitudeMeters = altitudeMeters;
+    }
+
+    unsigned long timeDifference = currentTimestamp - lastTimestamp;
+    float altitudeDifference = altitudeMeters - lastAltitudeMeters;
+    movingSpeed = abs(altitudeDifference / timeDifference);
+
+    if (movingSpeed < 0.2)
+    {
+        movingStatus = MovingStatus::Stopped;
+        movingDirection = MovingDirection::None;
+        movingSpeed = 0.0;
+    }
+    else
+    {
+        if (movingSpeed > (lastSpeed + 0.1))
+        {
+            movingStatus = MovingStatus::Accelerating;
+        }
+        else if (movingSpeed < (lastSpeed - 0.1))
+        {
+            movingStatus = MovingStatus::Stopping;
+        }
+        else
+        {
+            movingStatus = MovingStatus::Steady;
+        }
+
+        if (altitudeDifference > 0.5)
+        {
+            movingDirection = MovingDirection::Up;
+        }
+        else if (altitudeDifference < -0.5)
+        {
+            movingDirection = MovingDirection::Down;
+        }
+    }
+
+    sampleDataPoint->movingStatus = movingStatus;
+    sampleDataPoint->movingDirection = movingDirection;
+    sampleDataPoint->movingSpeed = movingSpeed;
+
+    lastAltitudeMeters = altitudeMeters;
+    lastTimestamp = currentTimestamp;
+    lastSpeed = movingSpeed;
 }

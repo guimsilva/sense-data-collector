@@ -28,7 +28,7 @@ public:
     /**
      * Sample the accelerometer data
      */
-    void sampleAccelerometer();
+    void sampleAccelerometer(bool logData = true);
 };
 
 #endif // ACCELEROMETER_H

@@ -26,15 +26,14 @@ private:
 
     void getTemperature();
 
-    /** @todo fix/improve this */
-    void getMovingStatus();
-
 public:
     Barometer(SampleDataPoint *_sampleDataPoint, SamplerConfig *_samplerConfig);
 
-    void sampleBarometer();
+    void samplePressure(bool logData = true);
 
-    float getAltitude() { return altitudeMeters; }
+    void sampleTemperature();
+
+    float getAltitudeMeters() { return altitudeMeters; }
 };
 
 #endif // BAROMETER_H

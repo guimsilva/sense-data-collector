@@ -3,7 +3,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-#include "Arduino_BMI270_BMM150.h"
 #include "sampler.h"
 
 Sampler::Sampler(SamplerConfig *_samplerConfig)
@@ -46,7 +45,6 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
 
     previousMillis = 0;
     currentMillis = 0;
-    startDataCollection = false;
 
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
@@ -56,7 +54,7 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
         {
             Serial.println("Interval");
         }
-        if (samplerConfig->samplerOptions->hasAccMovementTrigger)
+        if (samplerConfig->samplerOptions->hasMovementTrigger)
         {
             Serial.println("AccMovement");
         }
@@ -97,48 +95,48 @@ Sampler::Sampler(SamplerConfig *_samplerConfig)
     }
 }
 
-void Sampler::copySample(SampleDataPoint *newSample)
+void Sampler::copyFromSampleDataPoint(SampleDataPoint *destinationSampleDataPoint)
 {
-    newSample->timestamp = sampleDataPoint->timestamp;
-    newSample->temperatureC = sampleDataPoint->temperatureC;
-    newSample->pressureKpa = sampleDataPoint->pressureKpa;
-    newSample->altitudeMeters = sampleDataPoint->altitudeMeters;
-    newSample->movingStatus = sampleDataPoint->movingStatus;
-    newSample->movingDirection = sampleDataPoint->movingDirection;
-    newSample->movingSpeed = sampleDataPoint->movingSpeed;
+    destinationSampleDataPoint->timestamp = sampleDataPoint->timestamp;
+    destinationSampleDataPoint->temperatureC = sampleDataPoint->temperatureC;
+    destinationSampleDataPoint->pressureKpa = sampleDataPoint->pressureKpa;
+    destinationSampleDataPoint->altitudeMeters = sampleDataPoint->altitudeMeters;
+    destinationSampleDataPoint->movingStatus = sampleDataPoint->movingStatus;
+    destinationSampleDataPoint->movingDirection = sampleDataPoint->movingDirection;
+    destinationSampleDataPoint->movingSpeed = sampleDataPoint->movingSpeed;
 
     for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
     {
-        newSample->accFrequenciesX[j] = sampleDataPoint->accFrequenciesX[j];
-        newSample->accFequenciesY[j] = sampleDataPoint->accFequenciesY[j];
-        newSample->accFrequenciesZ[j] = sampleDataPoint->accFrequenciesZ[j];
+        destinationSampleDataPoint->accFrequenciesX[j] = sampleDataPoint->accFrequenciesX[j];
+        destinationSampleDataPoint->accFequenciesY[j] = sampleDataPoint->accFequenciesY[j];
+        destinationSampleDataPoint->accFrequenciesZ[j] = sampleDataPoint->accFrequenciesZ[j];
     }
 
     for (int j = 0; j < samplerConfig->micOptions->micNumSamples; j++)
     {
-        newSample->audioBuffer[j] = sampleDataPoint->audioBuffer[j];
+        destinationSampleDataPoint->audioBuffer[j] = sampleDataPoint->audioBuffer[j];
     }
 }
 
-void Sampler::resetSample(SampleDataPoint *_sample)
+void Sampler::resetSampleDataPoint(SampleDataPoint *targetSampleDataPoint)
 {
-    _sample->timestamp = 0;
-    _sample->temperatureC = 0.0;
-    _sample->pressureKpa = 0.0;
-    _sample->altitudeMeters = 0.0;
-    _sample->movingStatus = MovingStatus::Stopped;
-    _sample->movingSpeed = 0;
+    targetSampleDataPoint->timestamp = 0;
+    targetSampleDataPoint->temperatureC = 0.0;
+    targetSampleDataPoint->pressureKpa = 0.0;
+    targetSampleDataPoint->altitudeMeters = 0.0;
+    targetSampleDataPoint->movingStatus = MovingStatus::Stopped;
+    targetSampleDataPoint->movingSpeed = 0;
 
     for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
     {
-        _sample->accFrequenciesX[j] = 0.0;
-        _sample->accFequenciesY[j] = 0.0;
-        _sample->accFrequenciesZ[j] = 0.0;
+        targetSampleDataPoint->accFrequenciesX[j] = 0.0;
+        targetSampleDataPoint->accFequenciesY[j] = 0.0;
+        targetSampleDataPoint->accFrequenciesZ[j] = 0.0;
     }
 
     for (int j = 0; j < samplerConfig->micOptions->micNumSamples; j++)
     {
-        _sample->audioBuffer[j] = 0;
+        targetSampleDataPoint->audioBuffer[j] = 0;
     }
 }
 
@@ -212,23 +210,13 @@ void Sampler::sampleFrequencies()
 
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
     {
-        Serial.println("Sampling acc data...");
+        Serial.println("Sampling frequency data...");
     }
     for (int i = 0; i < samplerConfig->accOptions->accNumSamples; i++)
     {
         currentMicroseconds = micros();
 
         accelerometer->sampleAccelerometer();
-
-        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
-        {
-            Serial.print("Acceleration read: ");
-            Serial.print(accelerometer->accX);
-            Serial.print(" ");
-            Serial.print(accelerometer->accY);
-            Serial.print(" ");
-            Serial.println(accelerometer->accZ);
-        }
 
         accelerometer->vRealX[i] = accelerometer->accX;
         accelerometer->vRealY[i] = accelerometer->accY;
@@ -272,66 +260,70 @@ void Sampler::sampleFrequencies()
 
 /**
  * The reason to have this here intead of in the barometer class is because
- * it's possible we also include acc data in the future to improve the detection of movement.
+ * it's possible that acc data will also be included at some point, to improve the detection of movement.
  */
-void Sampler::detectVerticalMovement(MovingStatus *movingStatus, MovingDirection *movingDirection, float *movingSpeedMpS)
+bool Sampler::hasNewMovement()
 {
     if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
     {
         Serial.println("Detecting vertical movement...");
     }
-    static float currentAltitudeMeters = barometer->getAltitude();
-    ;
-    static unsigned long currentTimestamp = millis();
-    static float lastAltitudeMeters = 0.0;
-    static unsigned long lastTimestamp = 0;
-    static float lastSpeedMpS = 0.0;
 
-    unsigned long timeDifference = currentTimestamp - lastTimestamp;
-    float altitudeDifference = currentAltitudeMeters - lastAltitudeMeters;
+    bool hasNewTrigger = false;
+    static MovingTrigger lastTrigger;
 
-    *movingSpeedMpS = abs(altitudeDifference / timeDifference);
+    barometer->samplePressure(false);
 
-    if (*movingSpeedMpS < 0.1)
+    for (int i = 0; i < samplerConfig->samplerOptions->sizeofMovementTriggers; i++)
     {
-        *movingStatus = MovingStatus::Stopped;
-    }
-    else
-    {
-        if (*movingSpeedMpS > (lastSpeedMpS + 0.1))
+        if (samplerConfig->samplerOptions->movementTriggers[i].movingStatus == sampleDataPoint->movingStatus &&
+            samplerConfig->samplerOptions->movementTriggers[i].movingDirection == sampleDataPoint->movingDirection)
         {
-            *movingStatus = MovingStatus::Accelerating;
-        }
-        else
-        {
-            *movingStatus = MovingStatus::Stopping;
-        }
+            // If the last trigger is the same as the current one, then don't start data collection
+            if (lastTrigger.movingStatus == sampleDataPoint->movingStatus && lastTrigger.movingDirection == sampleDataPoint->movingDirection)
+            {
+                break;
+            }
 
-        if (altitudeDifference > 0.1)
-        {
-            *movingDirection = MovingDirection::Up;
-        }
-        else if (altitudeDifference < -0.1)
-        {
-            *movingDirection = MovingDirection::Down;
+            lastTrigger.movingStatus = sampleDataPoint->movingStatus;
+            lastTrigger.movingDirection = sampleDataPoint->movingDirection;
+            hasNewTrigger = true;
+            break;
         }
     }
 
-    lastAltitudeMeters = currentAltitudeMeters;
-    lastTimestamp = currentTimestamp;
-    lastSpeedMpS = *movingSpeedMpS;
-
-    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose ||
+        (samplerConfig->samplerOptions->logLevel >= LogLevel::Info && hasNewTrigger))
     {
         Serial.print("Moving status: ");
-        Serial.println(*movingStatus == MovingStatus::Stopped ? "Stopped" : *movingStatus == MovingStatus::Accelerating ? "Accelerating"
-                                                                                                                        : "Stopping");
+        char movingStatusStr[13];
+        switch (sampleDataPoint->movingStatus)
+        {
+        case MovingStatus::Stopped:
+            strcpy(movingStatusStr, "Stopped");
+            break;
+        case MovingStatus::Accelerating:
+            strcpy(movingStatusStr, "Accelerating");
+            break;
+        case MovingStatus::Steady:
+            strcpy(movingStatusStr, "Steady");
+            break;
+        case MovingStatus::Stopping:
+            strcpy(movingStatusStr, "Stopping");
+            break;
+        default:
+            strcpy(movingStatusStr, "Unknown");
+            break;
+        }
+        Serial.println(movingStatusStr);
         Serial.print("Moving direction: ");
-        Serial.println(*movingDirection == MovingDirection::Up ? "Up" : "Down");
+        Serial.println(sampleDataPoint->movingDirection == MovingDirection::Up ? "Up" : "Down");
         Serial.print("Moving speed: ");
-        Serial.print(*movingSpeedMpS);
-        Serial.println(" m/s");
+        Serial.print(sampleDataPoint->movingSpeed);
+        Serial.println(" m/s\n");
     }
+
+    return hasNewTrigger;
 }
 
 void Sampler::checkTriggers()
@@ -342,41 +334,19 @@ void Sampler::checkTriggers()
     }
 
     currentMillis = millis();
+    bool startDataCollection = false;
 
     if (samplerConfig->samplerOptions->hasIntervalTrigger)
     {
         startDataCollection = previousMillis == 0 || currentMillis - previousMillis >= samplerConfig->samplerOptions->intervalMsTrigger;
     }
-    else if (samplerConfig->samplerOptions->hasAccMovementTrigger)
+    else if (samplerConfig->samplerOptions->hasMovementTrigger)
     {
-        static MovingTrigger lastTrigger;
-
-        MovingStatus movingStatus;
-        MovingDirection movingDirection;
-        float movingSpeed;
-        detectVerticalMovement(&movingStatus, &movingDirection, &movingSpeed);
-
-        for (int i = 0; i < samplerConfig->samplerOptions->sizeofMovementTriggers; i++)
-        {
-            if (samplerConfig->samplerOptions->movementTriggers[i].movingStatus == movingStatus &&
-                samplerConfig->samplerOptions->movementTriggers[i].movingDirection == movingDirection)
-            {
-                // If the last trigger is the same as the current one, then don't start data collection
-                if (lastTrigger.movingStatus == movingStatus && lastTrigger.movingDirection == movingDirection)
-                {
-                    break;
-                }
-
-                lastTrigger.movingStatus = movingStatus;
-                lastTrigger.movingDirection = movingDirection;
-                startDataCollection = true;
-                break;
-            }
-        }
+        startDataCollection = hasNewMovement();
     }
     else if (samplerConfig->samplerOptions->hasAccRawTrigger)
     {
-        accelerometer->sampleAccelerometer();
+        accelerometer->sampleAccelerometer(false);
 
         if (abs(accelerometer->accX) > samplerConfig->samplerOptions->accThresholdTrigger[0] ||
             abs(accelerometer->accY) > samplerConfig->samplerOptions->accThresholdTrigger[1] ||
@@ -414,7 +384,8 @@ void Sampler::sampleData()
     previousMillis = currentMillis;
 
     // Sample Barometer first as the frequencies will block execution for some time
-    barometer->sampleBarometer();
+    barometer->samplePressure();
+    barometer->sampleTemperature();
 
     if (samplerConfig->samplerOptions->hasMicSensor)
     {
@@ -462,8 +433,8 @@ void Sampler::sampleData()
                 Serial.println(i);
             }
 
-            copySample(&sampleDataPoints[i]);
-            resetSample(sampleDataPoint);
+            copyFromSampleDataPoint(&sampleDataPoints[i]);
+            resetSampleDataPoint(sampleDataPoint);
 
             if (samplerConfig->samplerOptions->logLevel >= LogLevel::Info)
             {
@@ -497,7 +468,7 @@ void Sampler::sampleData()
         // Reset each sample in the buffer data points
         for (int i = 0; i < samplerConfig->samplerOptions->sampleDataPointBufferSize; i++)
         {
-            resetSample(&sampleDataPoints[i]);
+            resetSampleDataPoint(&sampleDataPoints[i]);
         }
 
         if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)

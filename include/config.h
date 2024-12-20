@@ -40,9 +40,9 @@ public:
             {
                 samplerOptions->hasIntervalTrigger = true;
             }
-            else if (samplerOptions->triggers[i] == Triggers::AccMovement)
+            else if (samplerOptions->triggers[i] == Triggers::Movement)
             {
-                samplerOptions->hasAccMovementTrigger = true;
+                samplerOptions->hasMovementTrigger = true;
             }
             else if (samplerOptions->triggers[i] == Triggers::AccRaw)
             {
@@ -56,7 +56,7 @@ public:
 
         // Check if triggers has Interval and other triggers at the same time, and if so, show a warning and stop
         if (samplerOptions->hasIntervalTrigger &&
-            (samplerOptions->hasAccMovementTrigger || samplerOptions->hasAccRawTrigger || samplerOptions->hasMicTrigger))
+            (samplerOptions->hasMovementTrigger || samplerOptions->hasAccRawTrigger || samplerOptions->hasMicTrigger))
         {
             Serial.println("Cannot have Interval and other triggers at the same time");
             while (1)
@@ -78,6 +78,10 @@ public:
                 samplerOptions->hasBarSensor = true;
             }
         }
+
+        samplerOptions->hasAccSensor = samplerOptions->hasAccSensor || samplerOptions->hasMovementTrigger || samplerOptions->hasAccRawTrigger;
+        samplerOptions->hasMicSensor = samplerOptions->hasMicSensor || samplerOptions->hasMicTrigger;
+        samplerOptions->hasBarSensor = samplerOptions->hasBarSensor || samplerOptions->hasMovementTrigger;
     }
 };
 

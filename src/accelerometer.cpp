@@ -53,18 +53,18 @@ Accelerometer::Accelerometer(SamplerConfig *_samplerConfig)
     }
 }
 
-void Accelerometer::sampleAccelerometer()
+void Accelerometer::sampleAccelerometer(bool logData)
 {
     if (IMU.accelerationAvailable())
     {
         IMU.readAcceleration(accX, accY, accZ);
 
-        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose && logData)
             Serial.println("Read acceleration data! >>> ");
     }
     else
     {
-        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose)
+        if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose && logData)
             Serial.println("Failed to read acceleration data! <<< ");
 
         accX = 0.0;

@@ -14,7 +14,7 @@ enum class Triggers
     /**
      * Uses MovingStatus and MovingDirection to trigger data collection
      */
-    AccMovement,
+    Movement,
     Microphone,
 };
 
@@ -109,8 +109,8 @@ struct SamplerOptions
      * @param _dataSensors Supported sensors for data collection. Default is Accelerometer, Microphone, Barometer
      * @param _sizeofDataSensors Size of the dataSensors array. Default is 3
      * @param _movementTriggers Movements that can trigger data collection. Default is Stopped, None
-     * @param _sizeofMovementTriggers Size of the movementTriggers array. Default is 7 (all possible movements currently)
-     * @param _accThresholdTrigger Raw acc threshold values to trigger data collection. Default is 100, 100, 100
+     * @param _sizeofMovementTriggers Size of the movementTriggers array. Default is 0 for no movement trigger or 7 (all possible movements currently) when there's one
+     * @param _accThresholdTrigger Raw acc threshold values to trigger data collection. Default is 100, 100, 100 when there's an accRaw trigger or 0, 0, 0 when there's none
      * @param _audioBufferSizeTrigger Min audio buffer size to trigger data collection. Default is 1000
      * @param _intervalInMillis Interval at which allow data collection (milliseconds). Default is 5000
      * @param _sampleDataPointBufferSize Number of whole sample data points to be collected before saving to file. Default is 10
@@ -127,8 +127,8 @@ struct SamplerOptions
         DataSensor *_dataSensors = nullptr,
         unsigned short _sizeofDataSensors = 3,
         MovingTrigger *_movementTriggers = nullptr,
-        unsigned short _sizeofMovementTriggers = 7,
-        int16_t *_accThresholdTrigger = nullptr,
+        unsigned short _sizeofMovementTriggers = 0,
+        int16_t _accThresholdTrigger[3] = nullptr,
         int16_t _audioBufferSizeTrigger = 0)
         : saveToSdCard(_saveToSdCard),
           logLevel(_logLevel),
@@ -190,20 +190,28 @@ struct SamplerOptions
             intervalMsTrigger = _intervalInMillis;
         }
 
-        if (_movementTriggers == nullptr && std::find(triggers, triggers + 1, Triggers::AccMovement) != triggers + 1)
+        if (_movementTriggers == nullptr)
         {
             if (logLevel >= LogLevel::Info)
                 Serial.println("Setting movementTriggers to default");
 
-            movementTriggers = new MovingTrigger[7];
-            movementTriggers[0] = MovingTrigger(MovingStatus::Stopped, MovingDirection::None);
-            movementTriggers[1] = MovingTrigger(MovingStatus::Accelerating, MovingDirection::Up);
-            movementTriggers[2] = MovingTrigger(MovingStatus::Accelerating, MovingDirection::Down);
-            movementTriggers[3] = MovingTrigger(MovingStatus::Steady, MovingDirection::Up);
-            movementTriggers[4] = MovingTrigger(MovingStatus::Steady, MovingDirection::Down);
-            movementTriggers[5] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Up);
-            movementTriggers[6] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Down);
-            sizeofMovementTriggers = 7;
+            if (std::find(triggers, triggers + 1, Triggers::Movement) != triggers + 1)
+            {
+                movementTriggers = new MovingTrigger[7];
+                movementTriggers[0] = MovingTrigger(MovingStatus::Stopped, MovingDirection::None);
+                movementTriggers[1] = MovingTrigger(MovingStatus::Accelerating, MovingDirection::Up);
+                movementTriggers[2] = MovingTrigger(MovingStatus::Accelerating, MovingDirection::Down);
+                movementTriggers[3] = MovingTrigger(MovingStatus::Steady, MovingDirection::Up);
+                movementTriggers[4] = MovingTrigger(MovingStatus::Steady, MovingDirection::Down);
+                movementTriggers[5] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Up);
+                movementTriggers[6] = MovingTrigger(MovingStatus::Stopping, MovingDirection::Down);
+                sizeofMovementTriggers = 7;
+            }
+            else
+            {
+                movementTriggers = _movementTriggers;
+                sizeofMovementTriggers = _sizeofMovementTriggers;
+            }
         }
         else
         {
@@ -211,24 +219,29 @@ struct SamplerOptions
                 Serial.println("Setting movementTriggers to user defined");
 
             movementTriggers = _movementTriggers;
+            sizeofMovementTriggers = _sizeofMovementTriggers;
         }
 
-        if (_accThresholdTrigger == nullptr && std::find(triggers, triggers + 1, Triggers::AccRaw) != triggers + 1)
+        if (_accThresholdTrigger == nullptr)
         {
             if (logLevel >= LogLevel::Info)
                 Serial.println("Setting accThresholdTrigger to default");
 
-            accThresholdTrigger = new int16_t[3];
-            accThresholdTrigger[0] = 100;
-            accThresholdTrigger[1] = 100;
-            accThresholdTrigger[2] = 100;
+            if (std::find(triggers, triggers + 1, Triggers::AccRaw) != triggers + 1)
+            {
+                accThresholdTrigger[0] = 100;
+                accThresholdTrigger[1] = 100;
+                accThresholdTrigger[2] = 100;
+            }
         }
         else
         {
             if (logLevel >= LogLevel::Info)
                 Serial.println("Setting accThresholdTrigger to user defined");
 
-            accThresholdTrigger = _accThresholdTrigger;
+            accThresholdTrigger[0] = _accThresholdTrigger[0];
+            accThresholdTrigger[1] = _accThresholdTrigger[1];
+            accThresholdTrigger[2] = _accThresholdTrigger[2];
         }
 
         if (_audioBufferSizeTrigger == 0 && std::find(triggers, triggers + 1, Triggers::Microphone) != triggers + 1)
@@ -242,8 +255,7 @@ struct SamplerOptions
         {
             if (logLevel >= LogLevel::Info)
             {
-                Serial.print("Setting audioBufferSizeTrigger to ");
-                Serial.println(_audioBufferSizeTrigger);
+                Serial.println("Setting audioBufferSizeTrigger to default");
             }
             audioBufferSizeTrigger = _audioBufferSizeTrigger;
         }
@@ -269,7 +281,7 @@ struct SamplerOptions
     /**
      * Raw acc threshold values to trigger data collection. One for each axis (X, Y, Z)
      */
-    int16_t *accThresholdTrigger;
+    int16_t accThresholdTrigger[3];
 
     /**
      * Movements that can trigger data collection
@@ -292,7 +304,7 @@ struct SamplerOptions
     // Internal - convert triggers into boolean values for faster checking
     bool hasIntervalTrigger = false;
     bool hasAccRawTrigger = false;
-    bool hasAccMovementTrigger = false;
+    bool hasMovementTrigger = false;
     bool hasMicTrigger = false;
 
     // Convert sensor data into boolean values for faster checking
