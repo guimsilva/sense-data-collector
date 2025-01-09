@@ -15,7 +15,7 @@ class Sampler
 private:
     // The sampler configuration
     SamplerConfig *samplerConfig;
-    // The sample data point reference
+    // The sample data point
     SampleDataPoint *sampleDataPoint;
     // The sample data point buffer
     SampleDataPoint *sampleDataPoints;

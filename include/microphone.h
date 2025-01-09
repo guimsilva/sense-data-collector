@@ -7,9 +7,7 @@
 class Microphone
 {
 private:
-    // The sample data point reference
     SampleDataPoint *sampleDataPoint;
-
     SamplerConfig *samplerConfig;
 
     static const int16_t tempBufferSize = 256; // Temporary buffer size

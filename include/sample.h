@@ -44,7 +44,7 @@ struct SampleDataPoint
 
     MovingStatus movingStatus;
     MovingDirection movingDirection;
-    int8_t movingSpeed;
+    float movingSpeed;
 
     unsigned long timestamp;
 };

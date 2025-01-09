@@ -10,7 +10,6 @@ class Barometer
 {
 private:
     SamplerConfig *samplerConfig;
-    // The sample data point reference
     SampleDataPoint *sampleDataPoint;
 
     float currentPressureKpa = 0.0f;

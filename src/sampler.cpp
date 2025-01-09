@@ -125,6 +125,7 @@ void Sampler::resetSampleDataPoint(SampleDataPoint *targetSampleDataPoint)
     targetSampleDataPoint->pressureKpa = 0.0;
     targetSampleDataPoint->altitudeMeters = 0.0;
     targetSampleDataPoint->movingStatus = MovingStatus::Stopped;
+    targetSampleDataPoint->movingDirection = MovingDirection::None;
     targetSampleDataPoint->movingSpeed = 0;
 
     for (int j = 0; j < samplerConfig->accOptions->accNumSamples; j++)
@@ -290,37 +291,6 @@ bool Sampler::hasNewMovement()
             hasNewTrigger = true;
             break;
         }
-    }
-
-    if (samplerConfig->samplerOptions->logLevel >= LogLevel::Verbose ||
-        (samplerConfig->samplerOptions->logLevel >= LogLevel::Info && hasNewTrigger))
-    {
-        Serial.print("Moving status: ");
-        char movingStatusStr[13];
-        switch (sampleDataPoint->movingStatus)
-        {
-        case MovingStatus::Stopped:
-            strcpy(movingStatusStr, "Stopped");
-            break;
-        case MovingStatus::Accelerating:
-            strcpy(movingStatusStr, "Accelerating");
-            break;
-        case MovingStatus::Steady:
-            strcpy(movingStatusStr, "Steady");
-            break;
-        case MovingStatus::Stopping:
-            strcpy(movingStatusStr, "Stopping");
-            break;
-        default:
-            strcpy(movingStatusStr, "Unknown");
-            break;
-        }
-        Serial.println(movingStatusStr);
-        Serial.print("Moving direction: ");
-        Serial.println(sampleDataPoint->movingDirection == MovingDirection::Up ? "Up" : "Down");
-        Serial.print("Moving speed: ");
-        Serial.print(sampleDataPoint->movingSpeed);
-        Serial.println(" m/s\n");
     }
 
     return hasNewTrigger;
