@@ -26,4 +26,5 @@ Welcome to my first C++ IoT project! This project aims to collect sensor data us
 
 ## Observations
 
-It may work with older variations of Arduino Nano 33 BLE Sense, but I haven't tested it yet. It may require installation of different Libs such as `Arduino_LSM9DS1`
+- It may work with other variations of Arduino Nano 33 BLE Sense, but it hasn't been tested yet. It may require installation of different libs such as `Arduino_LSM9DS1` and including them on the respective files.
+- It's been implemented and tested using PlatformIO (PIO)
