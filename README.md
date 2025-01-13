@@ -18,7 +18,6 @@ Welcome to my first C++ IoT project! This project aims to collect sensor data us
 
 ## Libs Required
 
-- ArduinoBLE
 - Arduino_BMI270_BMM150
 - Arduino_LPS22HB
 - ArduinoJson
@@ -26,5 +25,6 @@ Welcome to my first C++ IoT project! This project aims to collect sensor data us
 
 ## Observations
 
+- This repo is a working in progress. Using specific triggers or trying to combine them may not work as expected yet.
 - It may work with other variations of Arduino Nano 33 BLE Sense, but it hasn't been tested yet. It may require installation of different libs such as `Arduino_LSM9DS1` and including them on the respective files
 - This project has been implemented and tested using PlatformIO (PIO) only
