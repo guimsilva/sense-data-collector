@@ -260,7 +260,7 @@ void Sampler::sampleFrequencies()
 }
 
 /**
- * The reason to have this here intead of in the barometer class is because
+ * The reason to have this here intead of in the accelerometer/barometer class is because
  * it's possible that acc data will also be included at some point, to improve the detection of movement.
  */
 bool Sampler::hasNewMovement()
@@ -361,8 +361,10 @@ void Sampler::sampleData()
     {
         // If it has mic trigger then it's already started
         if (!samplerConfig->samplerOptions->hasMicTrigger)
+        {
             // Audio sampling is asynchronous, so it won't block sampleFrequencies
             microphone->startAudioSampling();
+        }
 
         // If it has mic but no acc sensor, then wait for the mic to sample the expected number of samples as it would be done in sampleFrequencies() otherwise
         if (!samplerConfig->samplerOptions->hasAccSensor)
@@ -370,7 +372,9 @@ void Sampler::sampleData()
             while (static_cast<unsigned long>(samplerConfig->micOptions->micSamplingLengthMs) < (currentMillis - previousMillis))
             {
                 if (samplerConfig->samplerOptions->hasMicSensor)
+                {
                     microphone->bufferCallback();
+                }
 
                 currentMillis = millis();
             }
@@ -381,8 +385,10 @@ void Sampler::sampleData()
     sampleFrequencies();
 
     if (samplerConfig->samplerOptions->hasMicSensor)
+    {
         // Stop audio sampling
         microphone->stopAudioSampling();
+    }
 
     // while (1)
     //     ;
@@ -410,6 +416,7 @@ void Sampler::sampleData()
             {
                 Serial.println("Sample added");
             }
+
             break;
         }
     }
