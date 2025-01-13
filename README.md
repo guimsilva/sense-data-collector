@@ -9,6 +9,7 @@ Welcome to my first C++ IoT project! This project aims to collect sensor data us
 - Collects data from various sensors on the Arduino Nano 33 BLE Sense
 - Stores the data for further analysis
 - Has options for each sensor and different triggers, buffer sizes and intervals
+- It was implemented with memory constraints in mind due to the limited resources on the board, which is why it avoids using an OS and other heavy libraries
 - Open to suggestions and improvements from the community
 
 ## Hardware Required
